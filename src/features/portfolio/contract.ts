@@ -31,4 +31,28 @@ export interface PortfolioError {
   code: string;
 }
 
+
+export const portfolioItemInputSchema = z.object({
+  category: z.enum(PORTFOLIO_CATEGORIES),
+  title: z.string().trim().min(1, 'Title is required').max(200),
+  summary: z.string().trim().min(1, 'Summary is required').max(2000),
+  sortOrder: z.number().int().default(0),
+});
+
+export type PortfolioItemInput = z.infer<typeof portfolioItemInputSchema>;
+
+export const updatePortfolioItemInputSchema = z
+  .object({
+    category: z.enum(PORTFOLIO_CATEGORIES).optional(),
+    title: portfolioItemInputSchema.shape.title.optional(),
+    summary: portfolioItemInputSchema.shape.summary.optional(),
+    sortOrder: z.number().int().optional(),
+  })
+  .refine((value) => Object.values(value).some((field) => field !== undefined), {
+    message: 'Nothing to update',
+  });
+
+export type UpdatePortfolioItemInput = z.infer<typeof updatePortfolioItemInputSchema>;
+
+export type PortfolioMutationResponse = PortfolioSuccess<{ item: PortfolioItem }> | PortfolioError;
 export type PortfolioListResponse = PortfolioSuccess<{ items: PortfolioItem[] }> | PortfolioError;

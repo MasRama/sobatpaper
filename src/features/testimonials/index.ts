@@ -1,8 +1,11 @@
 export { testimonialRoutes } from './server/routes';
-export { testimonialSchema } from './contract';
+export { testimonialInputSchema, testimonialSchema, updateTestimonialInputSchema } from './contract';
 export type {
   Testimonial,
   TestimonialError,
+  TestimonialInput,
   TestimonialListResponse,
+  TestimonialMutationResponse,
   TestimonialSuccess,
+  UpdateTestimonialInput,
 } from './contract';
