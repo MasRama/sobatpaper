@@ -85,7 +85,7 @@ async function submitLogin(): Promise<void> {
   <main class="flex min-h-[100dvh] items-center justify-center bg-background px-6 py-12 text-foreground">
     <section class="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-soft">
       <div class="mb-8">
-        <RouterLink to="/" class="font-heading text-lg font-semibold tracking-tight">Nara</RouterLink>
+        <RouterLink to="/" class="font-heading text-lg font-semibold tracking-tight">SobatPaper</RouterLink>
         <h1 class="mt-8 font-heading text-3xl font-semibold tracking-tight">Welcome back</h1>
         <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Sign in to continue to your workspace.</p>
       </div>
@@ -145,7 +145,7 @@ async function submitLogin(): Promise<void> {
       </form>
 
       <p class="mt-6 text-center text-sm text-muted-foreground">
-        New to Nara?
+        New to SobatPaper?
         <RouterLink to="/register" class="text-primary transition-opacity hover:opacity-80">Create an account</RouterLink>
       </p>
     </section>

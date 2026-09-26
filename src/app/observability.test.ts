@@ -164,14 +164,12 @@ describe('request lifecycle logging', () => {
       seen.push(args);
     }) as typeof Logger.info);
     await app.request('/assets/app.js');
-    await app.request('/landing/hero.webp');
-    await app.request('/nara.png');
+    await app.request('/favicon.svg');
     const paths = seen
       .filter(([message]) => message === 'HTTP request')
       .map(([, payload]) => (payload as Record<string, unknown>).path);
     expect(paths).not.toContain('/assets/app.js');
-    expect(paths).not.toContain('/landing/hero.webp');
-    expect(paths).not.toContain('/nara.png');
+    expect(paths).not.toContain('/favicon.svg');
   });
 
   it('keeps successful public SPA navigation out of request logs', async () => {
@@ -188,7 +186,7 @@ describe('request lifecycle logging', () => {
     const probe = new Hono();
     probe.use('*', requestId());
     probe.use('*', requestLifecycleLog());
-    probe.get('*', (context) => context.html('<!doctype html><title>Nara</title>'));
+    probe.get('*', (context) => context.html('<!doctype html><title>SobatPaper</title>'));
 
     const response = await probe.request('/arbitrary-public-browser-path');
     expect(response.status).toBe(200);

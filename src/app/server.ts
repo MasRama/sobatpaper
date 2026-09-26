@@ -63,9 +63,7 @@ function isStaticRequest(pathname: string): boolean {
   if (
     pathname === '/assets' ||
     pathname.startsWith('/assets/') ||
-    pathname === '/landing' ||
-    pathname.startsWith('/landing/') ||
-    pathname === '/nara.png'
+    pathname === '/favicon.svg'
   ) {
     return true;
   }
@@ -303,7 +301,7 @@ export function startServer(port = env.PORT) {
 
     server.on('error', (error: Error) => {
       stopSessionCleanup();
-      Logger.fatal('Nara v3 server error', error);
+      Logger.fatal('SobatPaper server error', error);
     });
     server.on('close', () => {
       stopSessionCleanup();
@@ -312,7 +310,7 @@ export function startServer(port = env.PORT) {
     return server;
   } catch (error) {
     Logger.error(
-      'Nara v3 failed to start',
+      'SobatPaper failed to start',
       error instanceof Error ? error : { error: String(error) },
     );
     throw error;

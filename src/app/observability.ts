@@ -49,12 +49,12 @@ export function requestId() {
 }
 
 const QUIET_PATHS = new Set(['/health', '/ready']);
-const QUIET_PREFIXES = ['/assets/', '/landing/'];
+const QUIET_PREFIXES = ['/assets/'];
 
 function quietPath(pathname: string): boolean {
   return (
     QUIET_PATHS.has(pathname) ||
-    pathname === '/nara.png' ||
+    pathname === '/favicon.svg' ||
     QUIET_PREFIXES.some((prefix) => pathname.startsWith(prefix))
   );
 }

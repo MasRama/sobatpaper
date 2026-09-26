@@ -3,7 +3,7 @@ import { getDatabase, migrate, seed } from '../src/shared/database';
 import { hashPassword, registerInputSchema } from '../src/features/auth';
 
 export const DEFAULT_ADMIN_NAME = 'Admin';
-export const DEFAULT_ADMIN_EMAIL = 'admin@nara.local';
+export const DEFAULT_ADMIN_EMAIL = 'admin@sobatpaper.id';
 export const DEFAULT_ADMIN_PASSWORD = 'admin12345';
 
 export interface BootstrapAdminCredentials {

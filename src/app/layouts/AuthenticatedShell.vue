@@ -48,9 +48,9 @@ async function logout(): Promise<void> {
         class="mx-auto flex min-h-16 max-w-[1400px] flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3 sm:px-10 lg:flex-nowrap lg:px-16 lg:py-0"
         aria-label="Application navigation"
       >
-        <RouterLink to="/" class="group flex shrink-0 items-center gap-2" aria-label="Nara home">
+        <RouterLink to="/" class="group flex shrink-0 items-center gap-2" aria-label="SobatPaper home">
           <span class="inline-block h-2.5 w-2.5 rounded-full bg-primary transition-transform duration-300 group-hover:scale-125"></span>
-          <span class="font-heading text-lg font-semibold tracking-tight">Nara</span>
+          <span class="font-heading text-lg font-semibold tracking-tight">SobatPaper</span>
         </RouterLink>
 
         <div

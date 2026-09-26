@@ -77,7 +77,7 @@ describe('admin bootstrap', () => {
     );
     expect(first.status, first.stderr).toBe(0);
     expect(first.stdout).toContain('Nara setup complete.');
-    expect(first.stdout).toContain('admin@nara.local');
+    expect(first.stdout).toContain('admin@sobatpaper.id');
     expect(first.stdout).toContain('admin12345');
     expect(first.stdout).toContain('Change the default password after signing in.');
 
@@ -86,7 +86,7 @@ describe('admin bootstrap', () => {
     try {
       const user = database
         .prepare('SELECT id, password, must_change_password FROM users WHERE email = ?')
-        .get('admin@nara.local') as { id: string; password: string; must_change_password: number } | undefined;
+        .get('admin@sobatpaper.id') as { id: string; password: string; must_change_password: number } | undefined;
       expect(user?.password).toMatch(/^[a-f0-9]{32}:[a-f0-9]{128}$/);
       expect(user?.must_change_password).toBe(1);
       originalHash = user?.password ?? '';
@@ -110,11 +110,11 @@ describe('admin bootstrap', () => {
       { cwd: process.cwd(), encoding: 'utf8', env },
     );
     expect(second.status, second.stderr).toBe(0);
-    expect(second.stdout).toContain('Admin bootstrap skipped; admin already exists: admin@nara.local.');
+    expect(second.stdout).toContain('Admin bootstrap skipped; admin already exists: admin@sobatpaper.id.');
 
     const reopened = new Database(databaseFile);
     try {
-      expect(reopened.prepare('SELECT password FROM users WHERE email = ?').get('admin@nara.local')).toEqual({
+      expect(reopened.prepare('SELECT password FROM users WHERE email = ?').get('admin@sobatpaper.id')).toEqual({
         password: originalHash,
       });
       expect(reopened.prepare('SELECT COUNT(*) AS count FROM users').get()).toEqual({ count: 1 });

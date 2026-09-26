@@ -94,9 +94,9 @@ async function submitRegistration(): Promise<void> {
   <main class="flex min-h-[100dvh] items-center justify-center bg-background px-6 py-12 text-foreground">
     <section class="w-full max-w-md rounded-lg border border-border bg-card p-8 shadow-soft">
       <div class="mb-8">
-        <RouterLink to="/" class="font-heading text-lg font-semibold tracking-tight">Nara</RouterLink>
+        <RouterLink to="/" class="font-heading text-lg font-semibold tracking-tight">SobatPaper</RouterLink>
         <h1 class="mt-8 font-heading text-3xl font-semibold tracking-tight">Create your account</h1>
-        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Start building your workspace with Nara.</p>
+        <p class="mt-2 text-sm leading-relaxed text-muted-foreground">Start your academic journey with SobatPaper.</p>
       </div>
 
       <form class="space-y-5" @submit.prevent="submitRegistration">

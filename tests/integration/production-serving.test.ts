@@ -124,7 +124,7 @@ describe('production browser and static delivery', () => {
   });
 
   it('serves the SPA shell for every shipped browser route and unknown browser paths', async () => {
-    for (const pathname of ['/', '/login', '/register', '/dashboard', '/profile', '/users', '/roles', '/this-route-does-not-exist']) {
+    for (const pathname of ['/', '/login', '/register', '/dashboard', '/admin', '/profile', '/users', '/roles', '/this-route-does-not-exist']) {
       const response = await get(pathname);
       expect(response.status, pathname).toBe(200);
       expect(response.headers.get('content-type'), pathname).toContain('text/html');
@@ -149,16 +149,16 @@ describe('production browser and static delivery', () => {
     expect(stylesheetResponse.headers.get('content-type')).toContain('text/css');
     expect(stylesheetResponse.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
 
-    const publicResponse = await get('/nara.png');
+    const publicResponse = await get('/favicon.svg');
     expect(publicResponse.status).toBe(200);
-    expect(publicResponse.headers.get('content-type')).toContain('image/png');
+    expect(publicResponse.headers.get('content-type')).toContain('image/svg+xml');
     expect(publicResponse.headers.get('cache-control')).toBe('public, max-age=3600');
   });
 
   it('returns 404 for missing assets and traversal attempts without serving HTML or source files', async () => {
     for (const pathname of [
       '/assets/does-not-exist.js',
-      '/landing/does-not-exist.webp',
+      '/missing-asset.svg',
       '/assets/%2e%2e/server.js',
       '/assets//etc/passwd',
       '/assets/%5C..%5Cserver.js',
