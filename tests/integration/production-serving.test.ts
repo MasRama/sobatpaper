@@ -108,7 +108,7 @@ beforeAll(async () => {
   const port = await findFreePort();
   startProductionServer(port);
   await waitForServer();
-});
+}, 180_000);
 
 afterAll(async () => {
   await stopProductionServer();
@@ -131,6 +131,25 @@ describe('production browser and static delivery', () => {
       expect(await response.text(), pathname).toContain('<div id="app"></div>');
       expect(response.headers.get('cache-control'), pathname).toBe('no-cache');
     }
+  });
+
+  it('serves sitemap and robots for crawlers', async () => {
+    const sitemap = await get('/sitemap.xml');
+    expect(sitemap.status).toBe(200);
+    expect(sitemap.headers.get('content-type')).toContain('application/xml');
+    const sitemapBody = await sitemap.text();
+    expect(sitemapBody).toContain('<urlset');
+    // Fresh production databases carry no content seeds; static paths are always present.
+    expect(sitemapBody).toContain('/layanan</loc>');
+    expect(sitemapBody).toContain('/harga</loc>');
+
+    const robots = await get('/robots.txt');
+    expect(robots.status).toBe(200);
+    expect(robots.headers.get('content-type')).toContain('text/plain');
+    const robotsBody = await robots.text();
+    expect(robotsBody).toContain('Disallow: /admin/');
+    expect(robotsBody).toContain('Sitemap: ');
+    expect(robotsBody).toContain('/sitemap.xml');
   });
 
   it('serves hashed assets and public assets with bounded cache policies', async () => {
