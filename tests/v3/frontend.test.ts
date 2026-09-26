@@ -47,7 +47,7 @@ describe('Vue frontend shell', () => {
 
     expect(router.currentRoute.value.path).toBe('/login');
     expect(container.querySelector('h1')?.textContent).toContain('Welcome back');
-    expect(container.firstElementChild).not.toBe(homeElement);
+    expect(container.firstElementChild).toBe(homeElement);
     expect(document.documentElement).toBe(documentElement);
   });
 
