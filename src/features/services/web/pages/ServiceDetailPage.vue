@@ -120,8 +120,14 @@ watch(
               Konsultasi Sekarang
             </a>
             <RouterLink
+              :to="`/order?service=${service.slug}`"
+              class="block rounded-lg bg-secondary-500 px-4 py-3 text-center text-sm font-semibold text-primary-950 transition-opacity hover:opacity-90"
+            >
+              Pesan Sekarang
+            </RouterLink>
+            <RouterLink
               to="/harga"
-              class="block rounded-lg border border-border px-4 py-3 text-center text-sm font-semibold transition-colors hover:border-primary/40"
+              class="block text-center text-sm font-semibold text-primary hover:underline"
             >
               Lihat Harga
             </RouterLink>

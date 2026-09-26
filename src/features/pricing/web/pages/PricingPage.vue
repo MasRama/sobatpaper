@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { RouterLink } from 'vue-router';
 import { formatIDR } from '../../../services/web';
 import { useSiteSettings } from '../../../site-settings/web';
+import { EstimationCalculator } from '../../../estimation/web';
 import type { PricingGroup } from '../../contract';
 import { createPricingClient } from '../client';
 
@@ -76,14 +78,26 @@ onMounted(async () => {
         <li>Biaya publikasi/APC jurnal tidak termasuk, kecuali dinyatakan eksplisit dalam paket.</li>
         <li>Harga final selalu disepakati tertulis sebelum pengerjaan dimulai.</li>
       </ul>
-      <a
-        :href="consultLink"
-        target="_blank"
-        rel="noreferrer"
-        class="mt-6 inline-block rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        Konsultasikan Kebutuhanmu
-      </a>
+      <div class="mt-6 flex flex-col gap-3 sm:flex-row">
+        <RouterLink
+          to="/order"
+          class="rounded-lg bg-primary px-6 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+        >
+          Pesan Sekarang
+        </RouterLink>
+        <a
+          :href="consultLink"
+          target="_blank"
+          rel="noreferrer"
+          class="rounded-lg border border-border bg-background px-6 py-3 text-center text-sm font-semibold transition-colors hover:border-primary/40"
+        >
+          Konsultasikan Kebutuhanmu
+        </a>
+      </div>
     </section>
+
+    <div class="mt-12 rounded-2xl border border-border bg-card p-6 shadow-soft sm:p-8">
+      <EstimationCalculator />
+    </div>
   </main>
 </template>

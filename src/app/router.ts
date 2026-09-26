@@ -9,6 +9,7 @@ import { ServiceDetailPage, ServicesPage } from '../features/services/web';
 import { PricingPage } from '../features/pricing/web';
 import { CaraKerjaPage, FaqPage, InfoPage } from '../features/content/web';
 import { PortfolioPage } from '../features/portfolio/web';
+import { OrderPage } from '../features/orders/web';
 
 export const appRoutes = [
   {
@@ -30,6 +31,11 @@ export const appRoutes = [
     path: '/harga',
     name: 'pricing',
     component: PricingPage,
+  },
+  {
+    path: '/order',
+    name: 'order',
+    component: OrderPage,
   },
   {
     path: '/cara-kerja',

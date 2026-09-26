@@ -23,7 +23,10 @@ import {
   resetLoginThrottle,
   SESSION_COOKIE_NAME,
 } from '../features/auth';
+import { ATTACHMENT_MAX_FILE_SIZE, attachmentsRoutes } from '../features/attachments';
 import { contentRoutes } from '../features/content';
+import { estimationRoutes } from '../features/estimation';
+import { ordersRoutes } from '../features/orders';
 import { portfolioRoutes } from '../features/portfolio';
 import { pricingRoutes } from '../features/pricing';
 import { servicesRoutes } from '../features/services';
@@ -168,8 +171,9 @@ app.use('/api/*', async (context, next) => {
 // Route-owned body budgets: every state-changing /api/* request is bounded
 // by MAX_JSON_BODY_BYTES regardless of declared Content-Type; only
 // POST /api/assets/avatar owns the narrowly larger upload request budget
-// (5 MB file + 256 KiB framing) with the Feature file check authoritative.
-app.use('*', apiBodyLimit({ jsonMaxBytes: env.MAX_JSON_BODY_BYTES, uploadMaxBytes: UPLOAD.MAX_FILE_SIZE + 256 * 1024 }));
+// (5 MB file + 256 KiB framing) and only POST /api/attachments owns its own
+// (10 MB file + 256 KiB framing), with the Feature file check authoritative.
+app.use('*', apiBodyLimit({ jsonMaxBytes: env.MAX_JSON_BODY_BYTES, uploadMaxBytes: UPLOAD.MAX_FILE_SIZE + 256 * 1024, attachmentMaxBytes: ATTACHMENT_MAX_FILE_SIZE + 256 * 1024 }));
 
 app.route('/health', healthRoutes);
 export function databaseReady(database: ReturnType<typeof getDatabase> = getDatabase()): boolean {
@@ -213,10 +217,13 @@ composeUsersServer(app);
 
 app.route('/api/services', servicesRoutes);
 app.route('/api/site-settings', siteSettingsRoutes);
+app.route('/api/estimation', estimationRoutes);
 app.route('/api/pricing', pricingRoutes);
 app.route('/api/content', contentRoutes);
 app.route('/api/portfolio', portfolioRoutes);
 app.route('/api/testimonials', testimonialRoutes);
+app.route('/api/attachments', attachmentsRoutes);
+app.route('/api/orders', ordersRoutes);
 app.get('*', async (context, next) => {
   const requested = requestPath(context);
   if (requested.unsafe || isReservedPath(requested.pathname)) {
