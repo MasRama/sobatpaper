@@ -9,7 +9,9 @@ import type { Context, Next } from 'hono';
  * - Every state-changing `/api/` request is bounded by `jsonMaxBytes`
  *   (default 1 MB) regardless of media type.
  * - Only `POST /api/assets/avatar` receives the narrowly larger
- *   `uploadMaxBytes` request budget (5 MB file + 256 KiB framing allowance).
+ *   `uploadMaxBytes` request budget (5 MB file + 256 KiB framing allowance),
+ *   and only `POST /api/attachments` receives `attachmentMaxBytes`
+ *   (10 MB file + 256 KiB framing allowance).
  *   The Feature-level 5 MB file check stays authoritative; this bound only
  *   rejects before `parseBody()` can materialize an arbitrarily large upload.
  *
@@ -20,21 +22,29 @@ import type { Context, Next } from 'hono';
 export interface ApiBodyLimitOptions {
   jsonMaxBytes: number;
   uploadMaxBytes: number;
+  attachmentMaxBytes: number;
 }
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const AVATAR_UPLOAD_PATH = '/api/assets/avatar';
+const ATTACHMENT_UPLOAD_PATH = '/api/attachments';
 
 function isApiRequest(context: Context): boolean {
   return new URL(context.req.url).pathname.startsWith('/api/');
 }
 
+function isUploadPath(context: Context, pathname: string): boolean {
+  return context.req.method.toUpperCase() === 'POST' && new URL(context.req.url).pathname === pathname;
+}
+
 /** Only the avatar upload endpoint owns the larger request budget. */
 function isAvatarUpload(context: Context): boolean {
-  return (
-    context.req.method.toUpperCase() === 'POST' &&
-    new URL(context.req.url).pathname === AVATAR_UPLOAD_PATH
-  );
+  return isUploadPath(context, AVATAR_UPLOAD_PATH);
+}
+
+/** Only the order-attachment upload endpoint owns its request budget. */
+function isAttachmentUpload(context: Context): boolean {
+  return isUploadPath(context, ATTACHMENT_UPLOAD_PATH);
 }
 
 async function exceedsBound(raw: Request, maxBytes: number): Promise<boolean> {
@@ -50,7 +60,7 @@ async function exceedsBound(raw: Request, maxBytes: number): Promise<boolean> {
       return Number.isFinite(declared) && declared > 0;
     }
     let seen = 0;
-    for (;;) {
+    for (; ;) {
       const { done, value } = await reader.read();
       if (done) break;
       seen += value.byteLength;
@@ -77,13 +87,13 @@ function declaredExceeds(context: Context, maxBytes: number): boolean {
 }
 
 export function apiBodyLimit(options: ApiBodyLimitOptions) {
-  const { jsonMaxBytes, uploadMaxBytes } = options;
+  const { jsonMaxBytes, uploadMaxBytes, attachmentMaxBytes } = options;
 
   return async function apiBodyLimitMiddleware(context: Context, next: Next): Promise<Response | void> {
     if (!isApiRequest(context)) return next();
     if (SAFE_METHODS.has(context.req.method.toUpperCase())) return next();
     // Route-owned budget: endpoint policy decides, never Content-Type.
-    const maxBytes = isAvatarUpload(context) ? uploadMaxBytes : jsonMaxBytes;
+    const maxBytes = isAvatarUpload(context) ? uploadMaxBytes : isAttachmentUpload(context) ? attachmentMaxBytes : jsonMaxBytes;
 
     if (declaredExceeds(context, maxBytes)) {
       return payloadTooLarge(context);

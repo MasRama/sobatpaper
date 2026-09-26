@@ -599,7 +599,7 @@ describe('CSRF middleware scope', () => {
 
   it('bounds budgets by route, never by Content-Type', async () => {
     const probe = new Hono();
-    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: 1024 }));
+    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: 1024, attachmentMaxBytes: 1024 }));
     probe.post('/api/json', (context) => context.json({ ok: true }));
     probe.post('/api/assets/avatar', (context) => context.json({ ok: true }));
     const blocked = await probe.request('/api/json', {
@@ -742,7 +742,7 @@ describe('request body Content-Type bypass', () => {
 
   it('denies the upload budget to unrelated endpoints declaring multipart', async () => {
     const probe = new Hono();
-    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: 1024 }));
+    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: 1024, attachmentMaxBytes: 1024 }));
     probe.post('/api/upload', (context) => context.json({ ok: true }));
     const form = new FormData();
     form.set('file', new File(['way too long for eight bytes'], 'big.bin'));
@@ -798,7 +798,7 @@ describe('multipart early bound', () => {
   it('enforces the multipart request cap on streamed bodies', async () => {
     const probe = new Hono();
     const cap = 1024;
-    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: cap }));
+    probe.use('*', apiBodyLimit({ jsonMaxBytes: 8, uploadMaxBytes: cap, attachmentMaxBytes: cap }));
     probe.post('/api/assets/avatar', (context) => context.json({ ok: true }));
     const big = new Uint8Array(cap + 512).fill(0x61);
     const stream = new ReadableStream({
