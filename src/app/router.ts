@@ -5,12 +5,76 @@ import DashboardPage from './pages/DashboardPage.vue';
 import AdminPage from './pages/AdminPage.vue';
 import HomePage from './pages/HomePage.vue';
 import NotFoundPage from './pages/NotFoundPage.vue';
+import { ServiceDetailPage, ServicesPage } from '../features/services/web';
+import { PricingPage } from '../features/pricing/web';
+import { CaraKerjaPage, FaqPage, InfoPage } from '../features/content/web';
+import { PortfolioPage } from '../features/portfolio/web';
 
 export const appRoutes = [
   {
     path: '/',
     name: 'home',
     component: HomePage,
+  },
+  {
+    path: '/layanan',
+    name: 'services',
+    component: ServicesPage,
+  },
+  {
+    path: '/layanan/:slug',
+    name: 'service-detail',
+    component: ServiceDetailPage,
+  },
+  {
+    path: '/harga',
+    name: 'pricing',
+    component: PricingPage,
+  },
+  {
+    path: '/cara-kerja',
+    name: 'cara-kerja',
+    component: CaraKerjaPage,
+  },
+  {
+    path: '/tentang-kami',
+    name: 'tentang-kami',
+    component: InfoPage,
+    props: { slug: 'tentang-kami' },
+  },
+  {
+    path: '/faq',
+    name: 'faq',
+    component: FaqPage,
+  },
+  {
+    path: '/portfolio',
+    name: 'portfolio',
+    component: PortfolioPage,
+  },
+  {
+    path: '/kebijakan-privasi',
+    name: 'kebijakan-privasi',
+    component: InfoPage,
+    props: { slug: 'kebijakan-privasi' },
+  },
+  {
+    path: '/syarat-ketentuan',
+    name: 'syarat-ketentuan',
+    component: InfoPage,
+    props: { slug: 'syarat-ketentuan' },
+  },
+  {
+    path: '/kebijakan-refund',
+    name: 'kebijakan-refund',
+    component: InfoPage,
+    props: { slug: 'kebijakan-refund' },
+  },
+  {
+    path: '/disclaimer',
+    name: 'disclaimer',
+    component: InfoPage,
+    props: { slug: 'disclaimer' },
   },
   {
     path: '/login',

@@ -2,6 +2,7 @@
 import { RouterView, useRoute } from 'vue-router';
 import AdminShell from './layouts/AdminShell.vue';
 import AuthenticatedShell from './layouts/AuthenticatedShell.vue';
+import PublicShell from './layouts/PublicShell.vue';
 
 const route = useRoute();
 
@@ -27,6 +28,8 @@ initializeTheme();
     <AuthenticatedShell v-else-if="route.meta.requiresAuth">
       <component :is="Component" />
     </AuthenticatedShell>
-    <component v-else :is="Component" />
+    <PublicShell v-else>
+      <component :is="Component" />
+    </PublicShell>
   </RouterView>
 </template>

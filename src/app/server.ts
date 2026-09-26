@@ -23,6 +23,12 @@ import {
   resetLoginThrottle,
   SESSION_COOKIE_NAME,
 } from '../features/auth';
+import { contentRoutes } from '../features/content';
+import { portfolioRoutes } from '../features/portfolio';
+import { pricingRoutes } from '../features/pricing';
+import { servicesRoutes } from '../features/services';
+import { siteSettingsRoutes } from '../features/site-settings';
+import { testimonialRoutes } from '../features/testimonials';
 import { getDatabase, migrate } from '../shared/database';
 import composeUsersServer from './bindings/users.server';
 import { healthRoutes } from '../../official-features/health';
@@ -205,6 +211,12 @@ app.route('/api/auth', authRoutes);
 app.route('/api/roles', accessRoutes);
 composeUsersServer(app);
 
+app.route('/api/services', servicesRoutes);
+app.route('/api/site-settings', siteSettingsRoutes);
+app.route('/api/pricing', pricingRoutes);
+app.route('/api/content', contentRoutes);
+app.route('/api/portfolio', portfolioRoutes);
+app.route('/api/testimonials', testimonialRoutes);
 app.get('*', async (context, next) => {
   const requested = requestPath(context);
   if (requested.unsafe || isReservedPath(requested.pathname)) {

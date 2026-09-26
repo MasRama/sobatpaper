@@ -1,17 +1,14 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
-import {
-  CONTACT_EMAIL,
-  DEFAULT_WHATSAPP_NUMBER,
-  PUBLIC_NAV_ITEMS,
-  SITE_NAME,
-  SITE_TAGLINE,
-  buildWhatsAppLink,
-} from '../site';
+import { useSiteSettings } from '../../features/site-settings/web';
+import { CONTACT_EMAIL, PUBLIC_NAV_ITEMS, SITE_NAME, SITE_TAGLINE } from '../site';
 
 const currentYear = new Date().getFullYear();
-const consultLink = buildWhatsAppLink();
-const whatsappDisplay = `+${DEFAULT_WHATSAPP_NUMBER}`;
+const { consultLink, load, settings } = useSiteSettings();
+const whatsappDisplay = computed(() => `+${settings.value.whatsappNumber}`);
+
+void load();
 </script>
 
 <template>
