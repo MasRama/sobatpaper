@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { personNameSchema } from '../../shared/security/input';
+import type { Attachment } from '../attachments';
 
 export const ORDER_STATUSES = [
   'lead',
@@ -110,4 +111,102 @@ export interface OrderError {
   errors?: Record<string, string[]>;
 }
 
+
+export const ORDER_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
+  lead: ['konsultasi', 'cancelled'],
+  konsultasi: ['menunggu_dokumen', 'analisis_scope', 'cancelled'],
+  menunggu_dokumen: ['analisis_scope', 'cancelled'],
+  analisis_scope: ['menunggu_pembayaran', 'cancelled'],
+  menunggu_pembayaran: ['paid', 'cancelled'],
+  paid: ['assigned', 'cancelled'],
+  assigned: ['dalam_pengerjaan', 'cancelled'],
+  dalam_pengerjaan: ['review', 'cancelled'],
+  review: ['revisi', 'final'],
+  revisi: ['review', 'final'],
+  final: ['completed', 'revisi'],
+  completed: [],
+  cancelled: ['konsultasi'],
+};
+
+export function isValidOrderTransition(from: OrderStatus, to: OrderStatus): boolean {
+  return from === to || ORDER_TRANSITIONS[from].includes(to);
+}
+
+export const orderDetailSchema = z.object({
+  id: z.string(),
+  number: z.string(),
+  status: z.enum(ORDER_STATUSES),
+  serviceSlug: z.string(),
+  packageName: z.string().nullable(),
+  educationLevel: z.string(),
+  field: z.string(),
+  institution: z.string(),
+  topic: z.string(),
+  method: z.string(),
+  pages: z.number(),
+  documentCondition: z.string(),
+  deadline: z.string(),
+  specialNeeds: z.string().nullable(),
+  contactName: z.string(),
+  contactWhatsapp: z.string(),
+  estimateMin: z.number().nullable(),
+  estimateMax: z.number().nullable(),
+  finalPrice: z.number().nullable(),
+  picUserId: z.string().nullable(),
+  cancelReason: z.string().nullable(),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+});
+
+export type OrderDetail = z.infer<typeof orderDetailSchema>;
+
+export const orderEventSchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  actorUserId: z.string().nullable(),
+  actorName: z.string().nullable(),
+  kind: z.enum(['status', 'final_price']),
+  fromValue: z.string().nullable(),
+  toValue: z.string().nullable(),
+  note: z.string().nullable(),
+  createdAt: z.number(),
+});
+
+export type OrderEvent = z.infer<typeof orderEventSchema>;
+
+const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD');
+
+export const adminOrdersQuerySchema = z.object({
+  status: z.enum(ORDER_STATUSES).optional(),
+  serviceSlug: z.enum(ORDER_SERVICES).optional(),
+  picUserId: z.string().min(1).optional(),
+  deadlineFrom: dateString.optional(),
+  deadlineTo: dateString.optional(),
+  search: z.string().trim().max(200).optional(),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export type AdminOrdersQuery = z.infer<typeof adminOrdersQuerySchema>;
+
+export const updateOrderInputSchema = z
+  .object({
+    status: z.enum(ORDER_STATUSES).optional(),
+    finalPrice: z.number().int().min(0).nullable().optional(),
+    picUserId: z.string().min(1).nullable().optional(),
+    cancelReason: z.string().trim().max(500).optional(),
+  })
+  .refine((value) => value.status !== undefined || value.finalPrice !== undefined || value.picUserId !== undefined, {
+    message: 'Nothing to update',
+  });
+
+export type UpdateOrderInput = z.infer<typeof updateOrderInputSchema>;
+
+export type OrdersListResponse =
+  | OrderSuccess<{ orders: OrderDetail[]; total: number }>
+  | OrderError;
+export type OrderDetailResponse =
+  | OrderSuccess<{ order: OrderDetail; attachments: Attachment[]; events: OrderEvent[] }>
+  | OrderError;
+export type UpdateOrderResponse = OrderSuccess<{ order: OrderDetail }> | OrderError;
 export type CreateOrderResponse = OrderSuccess<{ order: Order }> | OrderError;

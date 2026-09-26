@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto';
 import { getDatabase } from '../../../shared/database';
 import { createApplicationError } from '../../../shared/errors';
 import { linkAttachmentsToOrder } from '../../attachments';
-import type { CreateOrderInput, Order } from '../contract';
+import type { AdminOrdersQuery, CreateOrderInput, Order, OrderDetail, OrderEvent, OrderStatus, UpdateOrderInput } from '../contract';
+import { isValidOrderTransition } from '../contract';
 
 export interface OrderRow {
   id: string;
@@ -102,5 +103,191 @@ export function createOrder(input: CreateOrderInput): Order {
       estimate_min: input.estimateMin ?? null,
       estimate_max: input.estimateMax ?? null,
     });
+  })();
+}
+
+export interface OrderDetailRow extends OrderRow {
+  package_name: string | null;
+  education_level: string;
+  field: string;
+  institution: string;
+  topic: string;
+  method: string;
+  pages: number;
+  document_condition: string;
+  special_needs: string | null;
+  contact_name: string;
+  contact_whatsapp: string;
+  final_price: number | null;
+  pic_user_id: string | null;
+  cancel_reason: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+export interface OrderEventRow {
+  id: string;
+  order_id: string;
+  actor_user_id: string | null;
+  actor_name: string | null;
+  kind: string;
+  from_value: string | null;
+  to_value: string | null;
+  note: string | null;
+  created_at: number;
+}
+
+const DETAIL_COLUMNS = `id, number, status, service_slug, package_name, education_level, field, institution, topic, method, pages, document_condition, deadline, special_needs, contact_name, contact_whatsapp, estimate_min, estimate_max, final_price, pic_user_id, cancel_reason, created_at, updated_at`;
+
+function toOrderDetail(row: OrderDetailRow): OrderDetail {
+  return {
+    id: row.id,
+    number: row.number,
+    status: row.status as OrderDetail['status'],
+    serviceSlug: row.service_slug,
+    packageName: row.package_name,
+    educationLevel: row.education_level,
+    field: row.field,
+    institution: row.institution,
+    topic: row.topic,
+    method: row.method,
+    pages: row.pages,
+    documentCondition: row.document_condition,
+    deadline: row.deadline,
+    specialNeeds: row.special_needs,
+    contactName: row.contact_name,
+    contactWhatsapp: row.contact_whatsapp,
+    estimateMin: row.estimate_min,
+    estimateMax: row.estimate_max,
+    finalPrice: row.final_price,
+    picUserId: row.pic_user_id,
+    cancelReason: row.cancel_reason,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+function toOrderEvent(row: OrderEventRow): OrderEvent {
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    actorUserId: row.actor_user_id,
+    actorName: row.actor_name,
+    kind: row.kind as OrderEvent['kind'],
+    fromValue: row.from_value,
+    toValue: row.to_value,
+    note: row.note,
+    createdAt: row.created_at,
+  };
+}
+
+function listConditions(query: AdminOrdersQuery): { where: string; params: Array<string | number> } {
+  const clauses: string[] = [];
+  const params: Array<string | number> = [];
+  if (query.status) {
+    clauses.push('status = ?');
+    params.push(query.status);
+  }
+  if (query.serviceSlug) {
+    clauses.push('service_slug = ?');
+    params.push(query.serviceSlug);
+  }
+  if (query.picUserId) {
+    clauses.push('pic_user_id = ?');
+    params.push(query.picUserId);
+  }
+  if (query.deadlineFrom) {
+    clauses.push('deadline >= ?');
+    params.push(query.deadlineFrom);
+  }
+  if (query.deadlineTo) {
+    clauses.push('deadline <= ?');
+    params.push(query.deadlineTo);
+  }
+  if (query.search) {
+    clauses.push('(number LIKE ? ESCAPE \'\\\' OR contact_name LIKE ? ESCAPE \'\\\' OR topic LIKE ? ESCAPE \'\\\')');
+    const escaped = query.search.replace(/[\\%_]/g, (char) => `\\${char}`);
+    const like = `%${escaped}%`;
+    params.push(like, like, like);
+  }
+  return { where: clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '', params };
+}
+
+export function listOrders(query: AdminOrdersQuery): { orders: OrderDetail[]; total: number } {
+  const database = getDatabase();
+  const { where, params } = listConditions(query);
+  const total = (database.prepare(`SELECT COUNT(*) AS count FROM orders ${where}`).get(...params) as { count: number }).count;
+  const rows = database
+    .prepare(`SELECT ${DETAIL_COLUMNS} FROM orders ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`)
+    .all(...params, query.limit, query.offset) as OrderDetailRow[];
+  return { orders: rows.map(toOrderDetail), total };
+}
+
+export function findOrderDetailById(id: string): OrderDetail | undefined {
+  const row = getDatabase().prepare(`SELECT ${DETAIL_COLUMNS} FROM orders WHERE id = ?`).get(id) as OrderDetailRow | undefined;
+  return row ? toOrderDetail(row) : undefined;
+}
+
+export function listOrderEvents(orderId: string): OrderEvent[] {
+  const rows = getDatabase()
+    .prepare('SELECT id, order_id, actor_user_id, actor_name, kind, from_value, to_value, note, created_at FROM order_events WHERE order_id = ? ORDER BY created_at ASC')
+    .all(orderId) as OrderEventRow[];
+  return rows.map(toOrderEvent);
+}
+
+export interface OrderUpdateActor {
+  id: string;
+  name: string;
+}
+
+export function updateOrder(id: string, patch: UpdateOrderInput, actor: OrderUpdateActor): OrderDetail {
+  const database = getDatabase();
+  return database.transaction(() => {
+    const current = database.prepare(`SELECT ${DETAIL_COLUMNS} FROM orders WHERE id = ?`).get(id) as OrderDetailRow | undefined;
+    if (!current) {
+      throw createApplicationError('Order not found', 404, 'NOT_FOUND');
+    }
+    const nextStatus = (patch.status ?? current.status) as OrderStatus;
+    if (!isValidOrderTransition(current.status as OrderStatus, nextStatus)) {
+      throw createApplicationError(
+        `Cannot move order from ${current.status} to ${nextStatus}`,
+        422,
+        'INVALID_STATUS_TRANSITION',
+      );
+    }
+    if (nextStatus === 'cancelled' && current.status !== 'cancelled' && !patch.cancelReason?.trim()) {
+      throw createApplicationError('Cancel reason is required', 422, 'CANCEL_REASON_REQUIRED');
+    }
+    const nextFinalPrice = patch.finalPrice !== undefined ? patch.finalPrice : current.final_price;
+    const nextPic = patch.picUserId !== undefined ? patch.picUserId : current.pic_user_id;
+    const now = Date.now();
+    database
+      .prepare('UPDATE orders SET status = ?, final_price = ?, pic_user_id = ?, cancel_reason = ?, updated_at = ? WHERE id = ?')
+      .run(nextStatus, nextFinalPrice, nextPic, patch.cancelReason?.trim() || (nextStatus === 'cancelled' ? current.cancel_reason : null), now, id);
+    const events: Array<{ kind: string; from: string | null; to: string | null; note: string | null }> = [];
+    if (nextStatus !== current.status) {
+      events.push({
+        kind: 'status',
+        from: current.status,
+        to: nextStatus,
+        note: nextStatus === 'cancelled' ? (patch.cancelReason?.trim() ?? current.cancel_reason) : null,
+      });
+    }
+    if (nextFinalPrice !== current.final_price) {
+      events.push({
+        kind: 'final_price',
+        from: current.final_price === null ? null : String(current.final_price),
+        to: nextFinalPrice === null ? null : String(nextFinalPrice),
+        note: null,
+      });
+    }
+    const insertEvent = database.prepare(
+      'INSERT INTO order_events (id, order_id, actor_user_id, actor_name, kind, from_value, to_value, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    );
+    for (const event of events) {
+      insertEvent.run(randomUUID(), id, actor.id, actor.name, event.kind, event.from, event.to, event.note, now);
+    }
+    const updated = database.prepare(`SELECT ${DETAIL_COLUMNS} FROM orders WHERE id = ?`).get(id) as OrderDetailRow;
+    return toOrderDetail(updated);
   })();
 }
