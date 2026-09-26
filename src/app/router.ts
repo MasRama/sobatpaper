@@ -9,15 +9,16 @@ import { ServiceDetailPage, ServicesPage } from '../features/services/web';
 import { PricingPage } from '../features/pricing/web';
 import { CaraKerjaPage, FaqPage, InfoPage } from '../features/content/web';
 import { PortfolioPage } from '../features/portfolio/web';
-import { OrderPage } from '../features/orders/web';
-import { AdminContentPage } from '../features/content/web';
-import { AdminLeadsPage } from '../features/leads/web';
-import { AdminOrderDetailPage, AdminOrdersPage } from '../features/orders/web';
-import { AdminPortfolioPage } from '../features/portfolio/web';
-import { AdminPricingPage } from '../features/pricing/web';
-import { AdminServicesPage } from '../features/services/web';
-import { AdminSettingsPage } from '../features/site-settings/web';
-import { AdminTestimonialsPage } from '../features/testimonials/web';
+const OrderPage = () => import('../features/orders/web').then((module) => module.OrderPage);
+const AdminContentPage = () => import('../features/content/web').then((module) => module.AdminContentPage);
+const AdminLeadsPage = () => import('../features/leads/web').then((module) => module.AdminLeadsPage);
+const AdminOrderDetailPage = () => import('../features/orders/web').then((module) => module.AdminOrderDetailPage);
+const AdminOrdersPage = () => import('../features/orders/web').then((module) => module.AdminOrdersPage);
+const AdminPortfolioPage = () => import('../features/portfolio/web').then((module) => module.AdminPortfolioPage);
+const AdminPricingPage = () => import('../features/pricing/web').then((module) => module.AdminPricingPage);
+const AdminServicesPage = () => import('../features/services/web').then((module) => module.AdminServicesPage);
+const AdminSettingsPage = () => import('../features/site-settings/web').then((module) => module.AdminSettingsPage);
+const AdminTestimonialsPage = () => import('../features/testimonials/web').then((module) => module.AdminTestimonialsPage);
 
 export const appRoutes = [
   {
