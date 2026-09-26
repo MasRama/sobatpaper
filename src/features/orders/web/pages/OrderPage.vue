@@ -13,8 +13,17 @@ import {
   type Order,
 } from '../../contract';
 import { createOrdersClient } from '../client';
+import { createAnalyticsClient } from '../../../analytics/web';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'Pesan Layanan — SobatPaper.id',
+  description: 'Isi kebutuhan penelitianmu, unggah dokumen, terima estimasi biaya, lalu konsultasi via WhatsApp.',
+  path: '/order',
+});
 
 const ordersClient = createOrdersClient();
+const analytics = createAnalyticsClient();
 const attachmentsClient = createAttachmentsClient();
 const estimationClient = createEstimationClient();
 const route = useRoute();
@@ -77,6 +86,7 @@ onMounted(async () => {
   if (typeof preselected === 'string' && (ORDER_SERVICES as readonly string[]).includes(preselected)) {
     form.value.serviceSlug = preselected;
   }
+  analytics.track('start_order', typeof preselected === 'string' ? { service: preselected } : {});
 });
 
 async function onFilesSelected(event: Event): Promise<void> {
@@ -89,7 +99,10 @@ async function onFilesSelected(event: Event): Promise<void> {
   try {
     for (const file of files) {
       const response = await attachmentsClient.upload(file);
-      if (response.success) attachments.value.push(response.data.attachment);
+      if (response.success) {
+        attachments.value.push(response.data.attachment);
+        analytics.track('upload_document', {});
+      }
       else uploadError.value = `${file.name}: ${response.message}`;
     }
   } catch {
@@ -157,6 +170,7 @@ async function submit(): Promise<void> {
     const response = await ordersClient.create(input);
     if (response.success) {
       createdOrder.value = response.data.order;
+      analytics.track('submit_order', { order_id: response.data.order.number, service: response.data.order.serviceSlug });
       step.value = 'done';
     } else {
       submitError.value = response.message;

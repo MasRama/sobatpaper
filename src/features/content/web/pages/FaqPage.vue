@@ -3,6 +3,13 @@ import { onMounted, ref } from 'vue';
 import { useSiteSettings } from '../../../site-settings/web';
 import type { Faq } from '../../contract';
 import { createContentClient } from '../client';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'FAQ — SobatPaper.id',
+  description: 'Pertanyaan umum tentang konsultasi, harga, revisi, deadline, kerahasiaan, metode penelitian, dan publikasi jurnal.',
+  path: '/faq',
+});
 
 const client = createContentClient();
 const { consultLink, load: loadSettings } = useSiteSettings();
@@ -15,8 +22,23 @@ onMounted(async () => {
   await loadSettings();
   try {
     const response = await client.faqs('umum');
-    if (response.success) faqs.value = response.data.faqs;
-    else errorMessage.value = response.message;
+    if (response.success) {
+      faqs.value = response.data.faqs;
+      setPageHead({
+        title: 'FAQ — SobatPaper.id',
+        description: 'Pertanyaan umum tentang konsultasi, harga, revisi, deadline, kerahasiaan, metode penelitian, dan publikasi jurnal.',
+        path: '/faq',
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: response.data.faqs.slice(0, 20).map((faq) => ({
+            '@type': 'Question',
+            name: faq.question,
+            acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+          })),
+        },
+      });
+    } else errorMessage.value = response.message;
   } catch {
     errorMessage.value = 'FAQ gagal dimuat. Coba muat ulang halaman.';
   } finally {

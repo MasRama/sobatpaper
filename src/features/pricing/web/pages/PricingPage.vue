@@ -6,8 +6,17 @@ import { useSiteSettings } from '../../../site-settings/web';
 import { EstimationCalculator } from '../../../estimation/web';
 import type { PricingGroup } from '../../contract';
 import { createPricingClient } from '../client';
+import { createAnalyticsClient } from '../../../analytics/web';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'Harga Layanan — SobatPaper.id',
+  description: 'Harga transparan pendampingan skripsi, tesis, analisis data, editing, dan publikasi artikel jurnal SINTA.',
+  path: '/harga',
+});
 
 const client = createPricingClient();
+const analytics = createAnalyticsClient();
 const { consultLink, load: loadSettings } = useSiteSettings();
 
 const groups = ref<PricingGroup[]>([]);
@@ -15,6 +24,7 @@ const isLoading = ref(true);
 const errorMessage = ref('');
 
 onMounted(async () => {
+  analytics.track('view_price', {});
   await loadSettings();
   try {
     const response = await client.list();

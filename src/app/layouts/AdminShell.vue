@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
+import { setPageHead } from '../../shared/web/head';
 import { RouterLink, useRouter } from 'vue-router';
 import { useAuthSession } from '../../features/auth/web';
 import { SITE_NAME } from '../site';
@@ -8,6 +9,15 @@ interface AdminNavItem {
   label: string;
   to: string;
 }
+
+onMounted(() => {
+  setPageHead({
+    title: 'Admin — SobatPaper.id',
+    description: 'Dasbor operasional SobatPaper.',
+    path: '/admin',
+    noindex: true,
+  });
+});
 
 const NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Dasbor', to: '/admin' },

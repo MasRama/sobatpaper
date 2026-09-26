@@ -1,4 +1,5 @@
 export { servicesRoutes } from './server/routes';
+export { listServices } from './server/repository';
 export {
   createServiceInputSchema,
   serviceDetailSchema,

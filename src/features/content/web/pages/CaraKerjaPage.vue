@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { RouterLink } from 'vue-router';
 import { useSiteSettings } from '../../../site-settings/web';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'Cara Kerja — SobatPaper.id',
+  description: 'Delapan langkah sederhana dari konsultasi sampai file final: scope jelas, harga transparan, revisi terstruktur.',
+  path: '/cara-kerja',
+});
 
 const { consultLink } = useSiteSettings();
 

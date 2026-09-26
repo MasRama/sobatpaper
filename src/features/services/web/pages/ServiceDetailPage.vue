@@ -2,11 +2,14 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useSiteSettings } from '../../../site-settings/web';
+import { createAnalyticsClient } from '../../../analytics/web';
 import type { ServiceDetail } from '../../contract';
 import { createServicesClient } from '../client';
 import { formatIDR } from '../format';
+import { setPageHead } from '../../../../shared/web/head';
 
 const client = createServicesClient();
+const analytics = createAnalyticsClient();
 const route = useRoute();
 const router = useRouter();
 const { linkFor, load: loadSettings } = useSiteSettings();
@@ -29,6 +32,19 @@ async function loadDetail(slug: string): Promise<void> {
     const response = await client.detail(slug);
     if (response.success) {
       service.value = response.data.service;
+      setPageHead({
+        title: `${response.data.service.name} — SobatPaper.id`,
+        description: response.data.service.tagline,
+        path: `/layanan/${response.data.service.slug}`,
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Service',
+          name: response.data.service.name,
+          description: response.data.service.tagline,
+          provider: { '@type': 'Organization', name: 'SobatPaper.id' },
+        },
+      });
+      analytics.track('view_service', { service: response.data.service.slug });
     } else if (!response.success && response.code === 'NOT_FOUND') {
       await router.replace({ name: 'not-found' });
       return;

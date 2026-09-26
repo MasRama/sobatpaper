@@ -8,6 +8,20 @@ import { createServicesClient, formatIDR, type ServiceSummary } from '../../feat
 import { useSiteSettings } from '../../features/site-settings/web';
 import { TestimonialsSection } from '../../features/testimonials/web';
 import { SITE_TAGLINE } from '../site';
+import { setPageHead } from '../../shared/web/head';
+
+setPageHead({
+  title: 'SobatPaper.id — Academic Research Partner',
+  description: 'SobatPaper membantu penelitian, analisis data, penulisan ilmiah, editing, dan publikasi artikel jurnal untuk mahasiswa, dosen, dan peneliti.',
+  path: '/',
+  jsonLd: {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'SobatPaper.id',
+    slogan: 'Academic Research Partner',
+    description: 'Pendampingan riset dan penulisan akademik: skripsi, tesis, analisis data, editing, dan publikasi jurnal.',
+  },
+});
 
 const { consultLink } = useSiteSettings();
 const servicesClient = createServicesClient();

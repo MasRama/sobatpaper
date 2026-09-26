@@ -2,6 +2,13 @@
 import { onMounted, ref } from 'vue';
 import { PORTFOLIO_CATEGORIES, type PortfolioItem } from '../../contract';
 import { createPortfolioClient } from '../client';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'Portofolio — SobatPaper.id',
+  description: 'Contoh hasil pendampingan skripsi, tesis, analisis data, artikel jurnal, dan formatting akademik.',
+  path: '/portfolio',
+});
 
 const client = createPortfolioClient();
 const items = ref<PortfolioItem[]>([]);

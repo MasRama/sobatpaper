@@ -4,6 +4,13 @@ import { RouterLink } from 'vue-router';
 import type { ServiceSummary } from '../../contract';
 import { createServicesClient } from '../client';
 import { formatIDR } from '../format';
+import { setPageHead } from '../../../../shared/web/head';
+
+setPageHead({
+  title: 'Layanan Akademik — SobatPaper.id',
+  description: 'Pendampingan skripsi, tesis, analisis data, editing & formatting, konversi jurnal, dan penulisan artikel ilmiah.',
+  path: '/layanan',
+});
 
 const client = createServicesClient();
 const services = ref<ServiceSummary[]>([]);

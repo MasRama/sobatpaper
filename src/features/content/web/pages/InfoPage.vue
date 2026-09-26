@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import type { ContentPage } from '../../contract';
 import { parseBody } from '../blocks';
 import { createContentClient } from '../client';
+import { setPageHead } from '../../../../shared/web/head';
 
 const props = defineProps<{ slug: string }>();
 const client = createContentClient();
@@ -17,8 +18,14 @@ async function loadPage(slug: string): Promise<void> {
   errorMessage.value = '';
   try {
     const response = await client.page(slug);
-    if (response.success) page.value = response.data.page;
-    else errorMessage.value = response.message;
+    if (response.success) {
+      page.value = response.data.page;
+      setPageHead({
+        title: `${response.data.page.title} — SobatPaper.id`,
+        description: response.data.page.body.replace(/\s+/g, ' ').trim().slice(0, 160),
+        path: `/${slug}`,
+      });
+    } else errorMessage.value = response.message;
   } catch {
     errorMessage.value = 'Halaman gagal dimuat. Coba muat ulang.';
   } finally {
