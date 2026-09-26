@@ -65,3 +65,7 @@ landing-*.png
 
 # Graphify knowledge graph (generated)
 graphify-out/
+
+# SobatPaper internal docs (tidak dikomit)
+docs/PRD.md
+docs/TODO.md
