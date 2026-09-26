@@ -26,6 +26,7 @@ import {
 import { ATTACHMENT_MAX_FILE_SIZE, attachmentsRoutes } from '../features/attachments';
 import { contentRoutes } from '../features/content';
 import { estimationRoutes } from '../features/estimation';
+import { leadsRoutes } from '../features/leads';
 import { ordersRoutes } from '../features/orders';
 import { portfolioRoutes } from '../features/portfolio';
 import { pricingRoutes } from '../features/pricing';
@@ -224,6 +225,7 @@ app.route('/api/portfolio', portfolioRoutes);
 app.route('/api/testimonials', testimonialRoutes);
 app.route('/api/attachments', attachmentsRoutes);
 app.route('/api/orders', ordersRoutes);
+app.route('/api/leads', leadsRoutes);
 app.get('*', async (context, next) => {
   const requested = requestPath(context);
   if (requested.unsafe || isReservedPath(requested.pathname)) {

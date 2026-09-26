@@ -10,6 +10,14 @@ import { PricingPage } from '../features/pricing/web';
 import { CaraKerjaPage, FaqPage, InfoPage } from '../features/content/web';
 import { PortfolioPage } from '../features/portfolio/web';
 import { OrderPage } from '../features/orders/web';
+import { AdminContentPage } from '../features/content/web';
+import { AdminLeadsPage } from '../features/leads/web';
+import { AdminOrderDetailPage, AdminOrdersPage } from '../features/orders/web';
+import { AdminPortfolioPage } from '../features/portfolio/web';
+import { AdminPricingPage } from '../features/pricing/web';
+import { AdminServicesPage } from '../features/services/web';
+import { AdminSettingsPage } from '../features/site-settings/web';
+import { AdminTestimonialsPage } from '../features/testimonials/web';
 
 export const appRoutes = [
   {
@@ -104,6 +112,60 @@ export const appRoutes = [
     path: '/admin',
     name: 'admin',
     component: AdminPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/orders',
+    name: 'admin-orders',
+    component: AdminOrdersPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/orders/:id',
+    name: 'admin-order-detail',
+    component: AdminOrderDetailPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/leads',
+    name: 'admin-leads',
+    component: AdminLeadsPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/layanan',
+    name: 'admin-services',
+    component: AdminServicesPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/harga',
+    name: 'admin-pricing',
+    component: AdminPricingPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/portofolio',
+    name: 'admin-portfolio',
+    component: AdminPortfolioPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/testimonial',
+    name: 'admin-testimonials',
+    component: AdminTestimonialsPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/konten',
+    name: 'admin-content',
+    component: AdminContentPage,
+    meta: { requiresAuth: true, admin: true },
+  },
+  {
+    path: '/admin/pengaturan',
+    name: 'admin-settings',
+    component: AdminSettingsPage,
     meta: { requiresAuth: true, admin: true },
   },
   {

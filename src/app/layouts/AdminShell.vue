@@ -6,19 +6,19 @@ import { SITE_NAME } from '../site';
 
 interface AdminNavItem {
   label: string;
-  to?: string;
+  to: string;
 }
 
 const NAV_ITEMS: readonly AdminNavItem[] = [
   { label: 'Dasbor', to: '/admin' },
-  { label: 'Order' },
-  { label: 'Layanan' },
-  { label: 'Harga' },
-  { label: 'Leads' },
-  { label: 'Portofolio' },
-  { label: 'Testimonial' },
-  { label: 'FAQ' },
-  { label: 'Pengaturan' },
+  { label: 'Order', to: '/admin/orders' },
+  { label: 'Leads', to: '/admin/leads' },
+  { label: 'Layanan', to: '/admin/layanan' },
+  { label: 'Harga', to: '/admin/harga' },
+  { label: 'Portofolio', to: '/admin/portofolio' },
+  { label: 'Testimonial', to: '/admin/testimonial' },
+  { label: 'Konten', to: '/admin/konten' },
+  { label: 'Pengaturan', to: '/admin/pengaturan' },
 ];
 
 const authSession = useAuthSession();
@@ -57,23 +57,15 @@ async function logout(): Promise<void> {
           </span>
         </RouterLink>
         <div class="order-3 flex w-full items-center gap-1 overflow-x-auto pb-1 lg:order-none lg:w-auto lg:flex-1 lg:pb-0">
-          <template v-for="item in NAV_ITEMS" :key="item.label">
-            <RouterLink
-              v-if="item.to"
-              :to="item.to"
-              class="shrink-0 rounded-md px-3 py-2 text-sm text-primary-200 transition-colors hover:bg-white/10 hover:text-white"
-              active-class="bg-white/10 text-white"
-            >
-              {{ item.label }}
-            </RouterLink>
-            <span
-              v-else
-              class="shrink-0 cursor-not-allowed rounded-md px-3 py-2 text-sm text-primary-300/50"
-              title="Modul menyusul di M3"
-            >
-              {{ item.label }}
-            </span>
-          </template>
+          <RouterLink
+            v-for="item in NAV_ITEMS"
+            :key="item.label"
+            :to="item.to"
+            class="shrink-0 rounded-md px-3 py-2 text-sm text-primary-200 transition-colors hover:bg-white/10 hover:text-white"
+            active-class="bg-white/10 text-white"
+          >
+            {{ item.label }}
+          </RouterLink>
         </div>
         <div class="ml-auto flex shrink-0 items-center gap-2">
           <RouterLink to="/" class="whitespace-nowrap rounded-md px-3 py-2 text-sm text-primary-200 transition-colors hover:bg-white/10 hover:text-white">
