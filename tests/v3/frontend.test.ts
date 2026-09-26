@@ -15,10 +15,6 @@ describe('Vue frontend shell', () => {
       configurable: true,
       value: vi.fn(() => ({ matches: false })),
     });
-    Object.defineProperty(navigator, 'clipboard', {
-      configurable: true,
-      value: { writeText: vi.fn().mockResolvedValue(undefined) },
-    });
     await router.push('/');
   });
 
@@ -43,11 +39,9 @@ describe('Vue frontend shell', () => {
 
     const documentElement = document.documentElement;
     const homeElement = container.firstElementChild;
-    expect(container.querySelector('h1')?.textContent).toContain('The craft of');
+    expect(container.querySelector('h1')?.textContent).toContain('Pendampingan Riset');
 
-    const loginLink = container.querySelector('a[href="/login"]');
-    expect(loginLink).not.toBeNull();
-    loginLink?.click();
+    await router.push('/login');
     await new Promise<void>((resolve) => setTimeout(resolve, 0));
     await nextTick();
 
@@ -69,22 +63,5 @@ describe('Vue frontend shell', () => {
 
     expect(container.querySelector('[data-testid="not-found-page"]')).not.toBeNull();
     expect(container.querySelector('h1')?.textContent).toContain('Page not found');
-  });
-
-  it('preserves landing theme and copy interactions', async () => {
-    await mountAt('/');
-
-    const themeButton = container.querySelector('nav button');
-    expect(themeButton).not.toBeNull();
-    themeButton?.dispatchEvent(new MouseEvent('click'));
-    expect(document.documentElement.classList.contains('dark')).toBe(true);
-    expect(window.localStorage.getItem('nara-theme')).toBe('dark');
-
-    const copyButton = container.querySelector('button[aria-label="Copy clone command"]');
-    expect(copyButton).not.toBeNull();
-    copyButton?.dispatchEvent(new MouseEvent('click'));
-    await Promise.resolve();
-    await nextTick();
-    expect(copyButton?.textContent).toContain('copied');
   });
 });

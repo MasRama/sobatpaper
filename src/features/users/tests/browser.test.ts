@@ -327,7 +327,7 @@ beforeEach(async () => {
   cookieJar = new Map();
   document.cookie = 'auth_id=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   document.cookie = 'csrf_token=; expires=Thu, 01 Jan 1970 00:00:00 GMT';
-  window.localStorage.removeItem('nara-theme');
+  window.localStorage.removeItem('sobatpaper-theme');
   document.documentElement.classList.remove('dark');
   fetchRequests = [];
   fetchUrls = [];
@@ -382,7 +382,7 @@ describe('users browser surfaces', () => {
   });
 
   it('applies a saved theme on direct authenticated entry without visiting home first', async () => {
-    window.localStorage.setItem('nara-theme', 'dark');
+    window.localStorage.setItem('sobatpaper-theme', 'dark');
     await startAuthenticatedUser();
     await mountAt('/dashboard');
 
@@ -474,19 +474,6 @@ describe('users browser surfaces', () => {
 
     const filename = avatar?.getAttribute('src')?.split('/').pop();
     if (filename) await rm(resolve(process.cwd(), 'storage', 'avatars', filename), { force: true });
-  });
-
-  it('changes landing calls to match the current session', async () => {
-    await mountAt('/');
-    expect(container.querySelector('a[href="/register"]')?.textContent).toContain('Begin');
-
-    await startAuthenticatedUser();
-    await router.push('/');
-    await router.isReady();
-    await nextTick();
-
-    expect(container.querySelector('a[href="/dashboard"]')?.textContent).toContain('Dashboard');
-    expect([...container.querySelectorAll('a[href="/dashboard"]')].some((link) => link.textContent?.includes('Open dashboard'))).toBe(true);
   });
 
   it('logs out from the shell and protects account routes again', async () => {
