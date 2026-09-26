@@ -15,6 +15,12 @@ const roles = [
     slug: 'user',
     description: 'Standard user access',
   },
+  {
+    id: 'sobatpaper-role-customer',
+    name: 'Customer',
+    slug: 'customer',
+    description: 'SobatPaper customer access',
+  },
 ] as const;
 
 export function run(database: Database.Database): void {

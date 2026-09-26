@@ -9,7 +9,7 @@ import {
   registerInputSchema,
   type CurrentUser,
 } from '../contract';
-import { getUserPermissions, getUserRoles } from './access';
+import { findRoleBySlug, getUserPermissions, getUserRoles, syncUserRoles } from './access';
 import { AUTH, env } from '../../../shared/config';
 import { clientIp, requestCsrfToken } from '../../../shared/security';
 import { Logger } from '../../../shared/logging';
@@ -83,6 +83,8 @@ const registerHandler = async (context: Context) => {
       email: parsed.data.email,
       password: await hashPassword(parsed.data.password),
     });
+    const customerRole = findRoleBySlug('customer');
+    if (customerRole) syncUserRoles(user.id, [customerRole.id]);
     const token = startSession(user, context.req.header('user-agent'));
     setSessionCookie(context, token);
     Logger.logAuth('registration_success', { userId: user.id });

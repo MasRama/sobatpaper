@@ -388,7 +388,7 @@ describe('canonical SQLite migration lifecycle', () => {
       seed({ database, root: process.cwd() });
       seed({ database, root: process.cwd() });
       expect(database.prepare('SELECT COUNT(*) AS count FROM permissions').get()).toEqual({ count: 9 });
-      expect(database.prepare('SELECT COUNT(*) AS count FROM roles').get()).toEqual({ count: 2 });
+      expect(database.prepare('SELECT COUNT(*) AS count FROM roles').get()).toEqual({ count: 3 });
       expect(database.prepare('SELECT COUNT(*) AS count FROM role_permissions').get()).toEqual({ count: 9 });
       expect(database.prepare('SELECT COUNT(*) AS count FROM users').get()).toEqual({ count: 0 });
     } finally {
