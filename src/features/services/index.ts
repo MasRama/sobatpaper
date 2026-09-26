@@ -1,11 +1,22 @@
 export { servicesRoutes } from './server/routes';
-export { serviceDetailSchema, serviceFaqSchema, serviceSummarySchema } from './contract';
+export {
+  createServiceInputSchema,
+  serviceDetailSchema,
+  serviceFaqInputSchema,
+  serviceFaqSchema,
+  serviceSummarySchema,
+  updateServiceInputSchema,
+} from './contract';
 export type {
+  CreateServiceInput,
   ServiceDetail,
   ServiceDetailResponse,
   ServiceError,
   ServiceFaq,
+  ServiceFaqInput,
+  ServiceMutationResponse,
   ServiceSummary,
   ServiceSuccess,
   ServicesListResponse,
+  UpdateServiceInput,
 } from './contract';
