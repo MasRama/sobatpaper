@@ -1,0 +1,35 @@
+export { installOfficialFeature } from './install-feature';
+export type {
+  FeatureInstallError,
+  InstallFeatureResult,
+  InstalledFeature,
+} from './install-feature';
+export {
+  BINDINGS_DIRECTORY,
+  CANONICAL_SERVER_ROOT,
+  CANONICAL_WEB_ROOT,
+  camelCaseFeatureName,
+  classifyTemplateSpecifier,
+  composeServerRoot,
+  composeWebRoot,
+  defaultComposeFunction,
+  defaultRouteArray,
+  hasAssemblyTemplates,
+  pascalCaseFeatureName,
+  readAssemblyTemplates,
+  serverBindingAppFile,
+  serverBindingDestination,
+  serverBindingFileName,
+  serverBindingSpecifier,
+  serverComposeLocalName,
+  sourceFileHasSyntaxErrors,
+  validateAssemblyTemplates,
+  validateServerAssemblyTemplate,
+  validateWebAssemblyTemplate,
+  webBindingAppFile,
+  webBindingDestination,
+  webBindingFileName,
+  webBindingSpecifier,
+  webRoutesLocalName,
+} from './assembly';
+export type { AssemblyTemplates, DefaultComposeFunction, ServerComposition, WebComposition } from './assembly';

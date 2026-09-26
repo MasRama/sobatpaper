@@ -1,0 +1,218 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
+import { runCli, type CliIO } from '../router';
+
+const fixtures: string[] = [];
+afterEach(() => {
+  for (const fixture of fixtures.splice(0)) {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+});
+
+function createFixture(): string {
+  const fixture = mkdtempSync(path.join(os.tmpdir(), 'nara-inspect-'));
+  fixtures.push(fixture);
+  return fixture;
+}
+
+function writeFeature(fixture: string, name: string, files: Record<string, string>): void {
+  const directory = path.join(fixture, 'src/features', name);
+  for (const [file, content] of Object.entries(files)) {
+    const filePath = path.join(directory, file);
+    mkdirSync(path.dirname(filePath), { recursive: true });
+    writeFileSync(filePath, content);
+  }
+}
+
+function createIO(): CliIO & { output: string[]; errors: string[] } {
+  const output: string[] = [];
+  const errors: string[] = [];
+  return {
+    output,
+    errors,
+    stdout: (message) => output.push(message),
+    stderr: (message) => errors.push(message),
+  };
+}
+
+describe('inspect command', () => {
+  it('prints bounded facts for one feature', () => {
+    const fixture = createFixture();
+    writeFeature(fixture, 'auth', {
+      'index.ts': 'export const login = true;\n',
+    });
+    writeFeature(fixture, 'users', {
+      'index.ts': "import { login } from '@/features/auth';\nexport { login };\n",
+      'contract.ts': 'export type UserProfile = { id: string };\n',
+      'server/routes.ts': 'export {};\n',
+      'web/client.ts': 'export {};\n',
+      'tests/routes.test.ts': 'export {};\n',
+    });
+    mkdirSync(path.join(fixture, 'src/app'), { recursive: true });
+    writeFileSync(
+      path.join(fixture, 'src/app/server.ts'),
+      `import { Hono } from 'hono';
+import { userRoutes } from '../features/users';
+const app = new Hono();
+app.route('/api/users', userRoutes);
+`,
+    );
+    writeFileSync(
+      path.join(fixture, 'src/app/router.ts'),
+      `import { createRouter } from 'vue-router';
+import { UsersPage } from '../features/users/web';
+createRouter({ routes: [{ path: '/users', component: UsersPage }] });
+`,
+    );
+    const io = createIO();
+
+    const result = runCli(['inspect', 'users'], io, { cwd: fixture });
+    const output = io.output.join('');
+    expect(output.match(/^Public boundary provenance:$/gm)).toHaveLength(1);
+    expect(output.match(/^Web boundary provenance:$/gm)).toHaveLength(1);
+    expect(output).toContain('Web boundary provenance:\n- none');
+
+    expect(result.exitCode).toBe(0);
+    expect(output).toContain('Feature: users');
+    expect(output).toContain('Path: src/features/users');
+    expect(output).toContain('Public boundary provenance:\n- login [local]');
+    expect(output).toContain('Dependencies:\n- auth');
+    expect(output).toContain('Dependents:\n- none');
+    expect(output).toContain('Server:\n- server/routes.ts');
+    expect(output).toContain('Web:\n- web/client.ts');
+    expect(output).toContain('Contracts:\n- UserProfile');
+    expect(output).toContain('Tests:\n- tests/routes.test.ts');
+    expect(output).toContain('Application integration:');
+    expect(output).toContain('Server routes:\n- /api/users via userRoutes');
+    expect(output).toContain('Web routes:\n- /users via UsersPage');
+    expect(output).toContain('Application consumers:\n- src/app/router.ts: web: UsersPage');
+    expect(io.errors).toHaveLength(0);
+  });
+
+  it('emits the same facts as stable JSON', () => {
+    const fixture = createFixture();
+    writeFeature(fixture, 'users', {
+      'index.ts': 'export const profile = true;\n',
+      'contract.ts': 'export type UserProfile = { id: string };\n',
+    });
+    const io = createIO();
+
+    const result = runCli(['inspect', 'users', '--json'], io, { cwd: fixture });
+    const output = io.output.join('');
+    const payload: unknown = JSON.parse(output);
+
+    expect(result.exitCode).toBe(0);
+    expect(payload).toMatchObject({
+      name: 'users',
+      path: 'src/features/users',
+      publicExports: ['profile'],
+      webPublicExports: [],
+      boundaryExports: {
+        public: [
+          {
+            feature: 'users',
+            boundary: 'public',
+            boundaryFile: 'src/features/users/index.ts',
+            exportedName: 'profile',
+            kind: 'local',
+            precision: 'symbol',
+            typeOnly: false,
+          },
+        ],
+        web: [],
+      },
+      contracts: ['UserProfile'],
+      consumerEvidence: [],
+      integrations: {
+        applicationImports: [],
+        serverRoutes: [],
+        webRoutes: [],
+      },
+    });
+    expect(output).not.toContain('Feature:');
+    expect(io.errors).toHaveLength(0);
+  });
+  it('exposes public and web symbol consumers with type/value precision', () => {
+    const fixture = createFixture();
+    writeFeature(fixture, 'auth', {
+      'index.ts': 'export const requireAuth = true;\nexport type SessionUser = { id: string };\n',
+      'web/index.ts': 'export const LoginPage = true;\n',
+    });
+    writeFeature(fixture, 'users', {
+      'index.ts': `import { requireAuth as authenticate, type SessionUser } from '@/features/auth';
+import * as Auth from '@/features/auth';
+import '@/features/auth';
+`,
+      'web/router.ts': `import { LoginPage as Page } from '@/features/auth/web';
+import * as AuthWeb from '@/features/auth/web';
+`,
+    });
+    const io = createIO();
+    const result = runCli(['inspect', 'auth'], io, { cwd: fixture });
+    const output = io.output.join('');
+    expect(output.match(/^Public boundary provenance:$/gm)).toHaveLength(1);
+    expect(output.match(/^Web boundary provenance:$/gm)).toHaveLength(1);
+
+    expect(result.exitCode).toBe(0);
+    expect(output).toContain('Public API consumers:\n- requireAuth\n  - users — src/features/users/index.ts [value-capable]');
+    expect(output).toContain('  - users — src/features/users/index.ts [type-only]');
+    expect(output).toContain('Web boundary consumers:\n- LoginPage\n  - users — src/features/users/web/router.ts [value-capable]');
+    expect(output).not.toContain('[value]');
+    expect(output).not.toContain('[type]');
+
+    const machine = createIO();
+    runCli(['inspect', 'auth', '--json'], machine, { cwd: fixture });
+    const payload = JSON.parse(machine.output.join('')) as {
+      webPublicExports: string[];
+      consumerEvidence: Array<Record<string, unknown>>;
+    };
+    expect(payload.webPublicExports).toEqual(['LoginPage']);
+    expect(payload.consumerEvidence).toHaveLength(3);
+    expect(payload.consumerEvidence).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          from: 'users',
+          to: 'auth',
+          boundary: 'public',
+          importedSymbol: 'requireAuth',
+          localName: 'authenticate',
+          typeOnly: false,
+          precision: 'symbol',
+        }),
+        expect.objectContaining({
+          from: 'users',
+          to: 'auth',
+          boundary: 'public',
+          importedSymbol: 'SessionUser',
+          localName: 'SessionUser',
+          typeOnly: true,
+          precision: 'symbol',
+        }),
+        expect.objectContaining({
+          from: 'users',
+          to: 'auth',
+          boundary: 'web',
+          importedSymbol: 'LoginPage',
+          localName: 'Page',
+          typeOnly: false,
+          precision: 'symbol',
+        }),
+      ]),
+    );
+    expect(payload.consumerEvidence.every((evidence) => evidence.precision === 'symbol')).toBe(true);
+    expect(machine.errors).toHaveLength(0);
+  });
+  it('reports an unknown feature without a stack trace', () => {
+    const fixture = createFixture();
+    writeFeature(fixture, 'auth', { 'index.ts': 'export {};\n' });
+    const io = createIO();
+
+    const result = runCli(['inspect', 'billing'], io, { cwd: fixture });
+
+    expect(result.exitCode).toBe(1);
+    expect(io.errors.join('')).toContain('Unknown feature "billing"');
+    expect(io.errors.join('')).not.toContain('at ');
+  });
+});
