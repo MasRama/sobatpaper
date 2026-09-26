@@ -124,7 +124,7 @@ describe('production browser and static delivery', () => {
   });
 
   it('serves the SPA shell for every shipped browser route and unknown browser paths', async () => {
-    for (const pathname of ['/', '/login', '/register', '/dashboard', '/admin', '/profile', '/users', '/roles', '/layanan', '/layanan/skripsi', '/harga', '/cara-kerja', '/portfolio', '/faq', '/tentang-kami', '/order', '/this-route-does-not-exist']) {
+    for (const pathname of ['/', '/login', '/register', '/dashboard', '/admin', '/admin/orders', '/admin/leads', '/admin/layanan', '/admin/harga', '/admin/portofolio', '/admin/testimonial', '/admin/konten', '/admin/pengaturan', '/profile', '/users', '/roles', '/layanan', '/layanan/skripsi', '/harga', '/cara-kerja', '/portfolio', '/faq', '/tentang-kami', '/order', '/this-route-does-not-exist']) {
       const response = await get(pathname);
       expect(response.status, pathname).toBe(200);
       expect(response.headers.get('content-type'), pathname).toContain('text/html');
