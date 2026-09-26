@@ -23,6 +23,7 @@ import {
   resetLoginThrottle,
   SESSION_COOKIE_NAME,
 } from '../features/auth';
+import { analyticsRoutes } from '../features/analytics';
 import { ATTACHMENT_MAX_FILE_SIZE, attachmentsRoutes } from '../features/attachments';
 import { contentRoutes } from '../features/content';
 import { estimationRoutes } from '../features/estimation';
@@ -30,7 +31,7 @@ import { leadsRoutes } from '../features/leads';
 import { ordersRoutes } from '../features/orders';
 import { portfolioRoutes } from '../features/portfolio';
 import { pricingRoutes } from '../features/pricing';
-import { servicesRoutes } from '../features/services';
+import { listServices, servicesRoutes } from '../features/services';
 import { siteSettingsRoutes } from '../features/site-settings';
 import { testimonialRoutes } from '../features/testimonials';
 import { getDatabase, migrate } from '../shared/database';
@@ -226,6 +227,40 @@ app.route('/api/testimonials', testimonialRoutes);
 app.route('/api/attachments', attachmentsRoutes);
 app.route('/api/orders', ordersRoutes);
 app.route('/api/leads', leadsRoutes);
+app.route('/api/analytics', analyticsRoutes);
+
+const SITEMAP_STATIC_PATHS = [
+  '/',
+  '/layanan',
+  '/harga',
+  '/cara-kerja',
+  '/portfolio',
+  '/faq',
+  '/tentang-kami',
+  '/kebijakan-privasi',
+  '/syarat-ketentuan',
+  '/kebijakan-refund',
+  '/disclaimer',
+  '/order',
+];
+
+app.get('/sitemap.xml', (context) => {
+  const origin = new URL(context.req.url).origin;
+  const today = new Date().toISOString().slice(0, 10);
+  const paths = [...SITEMAP_STATIC_PATHS, ...listServices().map((service) => `/layanan/${service.slug}`)];
+  const urls = paths.map((path) => `  <url><loc>${origin}${path}</loc><lastmod>${today}</lastmod></url>`).join('\n');
+  context.header('Content-Type', 'application/xml');
+  context.header('Cache-Control', 'public, max-age=3600');
+  return context.body(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+});
+
+app.get('/robots.txt', (context) => {
+  const origin = new URL(context.req.url).origin;
+  context.header('Content-Type', 'text/plain');
+  context.header('Cache-Control', 'public, max-age=3600');
+  return context.body(`User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nSitemap: ${origin}/sitemap.xml\n`);
+});
+
 app.get('*', async (context, next) => {
   const requested = requestPath(context);
   if (requested.unsafe || isReservedPath(requested.pathname)) {
