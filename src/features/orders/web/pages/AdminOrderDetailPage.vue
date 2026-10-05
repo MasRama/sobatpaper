@@ -4,7 +4,7 @@ import { RouterLink, useRoute } from 'vue-router';
 import { formatIDR } from '../../../services/web';
 import { createUsersClient } from '../../../users/web';
 import type { Attachment } from '../../../attachments/web';
-import type { OrderDetail, OrderEvent, OrderStatus } from '../../contract';
+import type { OrderDetail, OrderEvent, OrderFinalFile, OrderPayment, OrderStatus } from '../../contract';
 import { DOCUMENT_CONDITION_LABELS, ORDER_STATUS_LABELS, ORDER_TRANSITIONS } from '../../contract';
 import { createOrdersClient } from '../client';
 
@@ -15,12 +15,21 @@ const usersClient = createUsersClient();
 const order = ref<OrderDetail | null>(null);
 const attachments = ref<Attachment[]>([]);
 const events = ref<OrderEvent[]>([]);
+const payments = ref<OrderPayment[]>([]);
+const finalFiles = ref<OrderFinalFile[]>([]);
 const picOptions = ref<Array<{ id: string; name: string }>>([]);
 const isLoading = ref(true);
 const errorMessage = ref('');
 const formMessage = ref('');
 const formError = ref('');
 const isSaving = ref(false);
+const isSavingPayment = ref(false);
+const isUploadingFinal = ref(false);
+const paymentForm = ref({ amount: '', method: 'transfer', reference: '' });
+const paymentMessage = ref('');
+const paymentError = ref('');
+const finalFileMessage = ref('');
+const finalFileError = ref('');
 
 const form = ref({ status: '' as '' | OrderStatus, finalPrice: '', picUserId: '', cancelReason: '' });
 
@@ -46,6 +55,8 @@ async function load(): Promise<void> {
     order.value = response.data.order;
     attachments.value = response.data.attachments;
     events.value = response.data.events;
+    payments.value = response.data.payments;
+    finalFiles.value = response.data.finalFiles;
     form.value = {
       status: response.data.order.status,
       finalPrice: response.data.order.finalPrice === null ? '' : String(response.data.order.finalPrice),
@@ -57,6 +68,82 @@ async function load(): Promise<void> {
   } finally {
     isLoading.value = false;
   }
+}
+
+async function addPayment(): Promise<void> {
+  if (!order.value || isSavingPayment.value) return;
+  paymentMessage.value = '';
+  paymentError.value = '';
+  const amount = Number(paymentForm.value.amount);
+  if (!Number.isInteger(amount) || amount <= 0) {
+    paymentError.value = 'Nominal pembayaran wajib lebih dari 0.';
+    return;
+  }
+  isSavingPayment.value = true;
+  try {
+    const response = await client.createPayment(order.value.id, {
+      amount,
+      method: paymentForm.value.method,
+      reference: paymentForm.value.reference.trim() || null,
+    });
+    if (!response.success) {
+      paymentError.value = response.message;
+      return;
+    }
+    paymentForm.value = { amount: '', method: 'transfer', reference: '' };
+    paymentMessage.value = 'Pembayaran tercatat.';
+    await load();
+  } catch (error) {
+    paymentError.value = error instanceof Error ? error.message : 'Gagal mencatat pembayaran';
+  } finally {
+    isSavingPayment.value = false;
+  }
+}
+
+async function removePayment(paymentId: string): Promise<void> {
+  if (!order.value) return;
+  const response = await client.deletePayment(order.value.id, paymentId);
+  if (!response.success) {
+    paymentError.value = response.message;
+    return;
+  }
+  paymentMessage.value = 'Pembayaran dihapus.';
+  await load();
+}
+
+async function uploadFinalFile(event: Event): Promise<void> {
+  if (!order.value || isUploadingFinal.value) return;
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+  finalFileMessage.value = '';
+  finalFileError.value = '';
+  isUploadingFinal.value = true;
+  try {
+    const response = await client.uploadFinalFile(order.value.id, file);
+    if (!response.success) {
+      finalFileError.value = response.message;
+      return;
+    }
+    finalFileMessage.value = 'File final berhasil diunggah.';
+    input.value = '';
+    await load();
+  } catch (error) {
+    finalFileError.value = error instanceof Error ? error.message : 'Gagal mengunggah file final';
+  } finally {
+    isUploadingFinal.value = false;
+  }
+}
+
+async function removeFinalFile(fileId: string): Promise<void> {
+  if (!order.value) return;
+  const response = await client.deleteFinalFile(order.value.id, fileId);
+  if (!response.success) {
+    finalFileError.value = response.message;
+    return;
+  }
+  finalFileMessage.value = 'File final dihapus.';
+  await load();
 }
 
 async function loadPicOptions(): Promise<void> {
@@ -171,6 +258,47 @@ onMounted(() => {
             </li>
           </ul>
           <p v-else class="mt-3 text-sm text-muted-foreground">Tidak ada dokumen terlampir.</p>
+
+          <h2 class="mt-8 font-heading text-base font-semibold">Pembayaran</h2>
+          <form class="mt-3 grid gap-3 sm:grid-cols-3" @submit.prevent="addPayment">
+            <input v-model="paymentForm.amount" type="number" min="1" step="1000" placeholder="Nominal" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            <input v-model="paymentForm.method" type="text" placeholder="Metode" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            <input v-model="paymentForm.reference" type="text" placeholder="Referensi (opsional)" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" />
+            <button type="submit" :disabled="isSavingPayment" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground sm:col-span-3 disabled:opacity-60">
+              {{ isSavingPayment ? 'Menyimpan…' : 'Catat pembayaran' }}
+            </button>
+          </form>
+          <p v-if="paymentMessage" class="mt-3 text-sm text-primary">{{ paymentMessage }}</p>
+          <p v-if="paymentError" role="alert" class="mt-3 text-sm text-destructive">{{ paymentError }}</p>
+          <ul v-if="payments.length" class="mt-3 space-y-2 text-sm">
+            <li v-for="payment in payments" :key="payment.id" class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border px-3 py-2">
+              <div>
+                <span class="font-medium">{{ formatIDR(payment.amount) }}</span>
+                <span class="text-muted-foreground"> · {{ payment.method }} · {{ formatDateTime(payment.paidAt) }}</span>
+                <span v-if="payment.reference" class="block text-muted-foreground">Ref: {{ payment.reference }}</span>
+              </div>
+              <button type="button" class="text-xs font-semibold text-destructive hover:underline" @click="removePayment(payment.id)">Hapus</button>
+            </li>
+          </ul>
+          <p v-else class="mt-3 text-sm text-muted-foreground">Belum ada pembayaran tercatat.</p>
+
+          <h2 class="mt-8 font-heading text-base font-semibold">File final</h2>
+          <input type="file" accept=".pdf,.doc,.docx,.xlsx,.csv,.pptx,.zip" class="mt-3 block w-full text-sm" :disabled="isUploadingFinal" @change="uploadFinalFile" />
+          <p v-if="finalFileMessage" class="mt-3 text-sm text-primary">{{ finalFileMessage }}</p>
+          <p v-if="finalFileError" role="alert" class="mt-3 text-sm text-destructive">{{ finalFileError }}</p>
+          <ul v-if="finalFiles.length" class="mt-3 space-y-2 text-sm">
+            <li v-for="file in finalFiles" :key="file.id" class="flex items-center justify-between gap-3 rounded-lg border border-border px-3 py-2">
+              <div class="min-w-0">
+                <span class="block truncate font-medium">{{ file.name }}</span>
+                <span class="text-muted-foreground">{{ file.size }} byte · {{ formatDateTime(file.createdAt) }}</span>
+              </div>
+              <div class="flex shrink-0 items-center gap-3">
+                <a :href="`/api/orders/${order.id}/final-files/${file.id}`" download class="font-semibold text-primary hover:underline">Unduh</a>
+                <button type="button" class="text-xs font-semibold text-destructive hover:underline" @click="removeFinalFile(file.id)">Hapus</button>
+              </div>
+            </li>
+          </ul>
+          <p v-else class="mt-3 text-sm text-muted-foreground">Belum ada file final.</p>
 
           <h2 class="mt-8 font-heading text-base font-semibold">Riwayat perubahan ({{ events.length }})</h2>
           <ol v-if="events.length > 0" class="mt-3 space-y-2 text-sm">

@@ -174,6 +174,40 @@ export const orderEventSchema = z.object({
 
 export type OrderEvent = z.infer<typeof orderEventSchema>;
 
+export const orderPaymentSchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  amount: z.number().int().min(0),
+  method: z.string(),
+  reference: z.string().nullable(),
+  paidAt: z.number(),
+  createdByUserId: z.string().nullable(),
+  createdByName: z.string().nullable(),
+  createdAt: z.number(),
+});
+
+export type OrderPayment = z.infer<typeof orderPaymentSchema>;
+
+export const orderFinalFileSchema = z.object({
+  id: z.string(),
+  orderId: z.string(),
+  name: z.string(),
+  size: z.number(),
+  uploadedByName: z.string().nullable(),
+  createdAt: z.number(),
+});
+
+export type OrderFinalFile = z.infer<typeof orderFinalFileSchema>;
+
+export const createOrderPaymentInputSchema = z.object({
+  amount: z.number().int().min(1),
+  method: z.string().trim().min(1).max(100),
+  reference: z.string().trim().max(200).nullable().optional(),
+  paidAt: z.number().int().positive().optional(),
+});
+
+export type CreateOrderPaymentInput = z.infer<typeof createOrderPaymentInputSchema>;
+
 const dateString = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD');
 
 export const adminOrdersQuerySchema = z.object({
@@ -206,7 +240,17 @@ export type OrdersListResponse =
   | OrderSuccess<{ orders: OrderDetail[]; total: number }>
   | OrderError;
 export type OrderDetailResponse =
-  | OrderSuccess<{ order: OrderDetail; attachments: Attachment[]; events: OrderEvent[] }>
+  | OrderSuccess<{
+      order: OrderDetail;
+      attachments: Attachment[];
+      events: OrderEvent[];
+      payments: OrderPayment[];
+      finalFiles: OrderFinalFile[];
+    }>
   | OrderError;
 export type UpdateOrderResponse = OrderSuccess<{ order: OrderDetail }> | OrderError;
 export type CreateOrderResponse = OrderSuccess<{ order: Order }> | OrderError;
+export type CreateOrderPaymentResponse = OrderSuccess<{ payment: OrderPayment }> | OrderError;
+export type DeleteOrderPaymentResponse = OrderSuccess | OrderError;
+export type UploadOrderFinalFileResponse = OrderSuccess<{ file: OrderFinalFile }> | OrderError;
+export type DeleteOrderFinalFileResponse = OrderSuccess | OrderError;

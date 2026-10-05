@@ -13,3 +13,4 @@ export type {
 } from '../contract';
 export { LEAD_STATUS_LABELS, LEAD_STATUSES } from '../contract';
 export { default as AdminLeadsPage } from './pages/AdminLeadsPage.vue';
+export { default as ConsultationLeadForm } from './components/ConsultationLeadForm.vue';

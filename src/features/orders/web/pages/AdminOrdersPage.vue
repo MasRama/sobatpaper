@@ -2,18 +2,21 @@
 import { onMounted, ref } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 import { formatIDR } from '../../../services/web';
+import { createUsersClient } from '../../../users/web';
 import type { AdminOrdersQuery, OrderDetail } from '../../contract';
 import { ORDER_SERVICES, ORDER_STATUS_LABELS, ORDER_STATUSES } from '../../contract';
 import { createOrdersClient } from '../client';
 
 const client = createOrdersClient();
+const usersClient = createUsersClient();
 const route = useRoute();
 
 const orders = ref<OrderDetail[]>([]);
 const total = ref(0);
 const isLoading = ref(true);
 const errorMessage = ref('');
-const filters = ref({ status: '', serviceSlug: '', search: '' });
+const filters = ref({ status: '', serviceSlug: '', picUserId: '', deadlineFrom: '', deadlineTo: '', search: '' });
+const picOptions = ref<Array<{ id: string; name: string }>>([]);
 const offset = ref(0);
 const limit = 20;
 
@@ -24,6 +27,9 @@ async function load(): Promise<void> {
     const response = await client.list({
       status: (filters.value.status || undefined) as OrderDetail['status'] | undefined,
       serviceSlug: (filters.value.serviceSlug || undefined) as AdminOrdersQuery['serviceSlug'],
+      picUserId: filters.value.picUserId || undefined,
+      deadlineFrom: filters.value.deadlineFrom || undefined,
+      deadlineTo: filters.value.deadlineTo || undefined,
       search: filters.value.search || undefined,
       limit,
       offset: offset.value,
@@ -40,6 +46,15 @@ async function load(): Promise<void> {
     errorMessage.value = error instanceof Error ? error.message : 'Gagal memuat order';
   } finally {
     isLoading.value = false;
+  }
+}
+
+async function loadPicOptions(): Promise<void> {
+  try {
+    const response = await usersClient.listUsers({ limit: 100 });
+    if (response.success) picOptions.value = response.data.users.map((user) => ({ id: user.id, name: user.name }));
+  } catch {
+    picOptions.value = [];
   }
 }
 
@@ -64,8 +79,12 @@ onMounted(() => {
   const query = route.query;
   if (typeof query.status === 'string') filters.value.status = query.status;
   if (typeof query.serviceSlug === 'string') filters.value.serviceSlug = query.serviceSlug;
+  if (typeof query.picUserId === 'string') filters.value.picUserId = query.picUserId;
+  if (typeof query.deadlineFrom === 'string') filters.value.deadlineFrom = query.deadlineFrom;
+  if (typeof query.deadlineTo === 'string') filters.value.deadlineTo = query.deadlineTo;
   if (typeof query.search === 'string') filters.value.search = query.search;
   void load();
+  void loadPicOptions();
 });
 </script>
 
@@ -75,7 +94,7 @@ onMounted(() => {
     <h1 class="mt-3 font-heading text-3xl font-semibold tracking-tight">Order</h1>
     <p class="mt-3 text-sm text-muted-foreground">{{ total }} order tercatat.</p>
 
-    <form class="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-card p-4 sm:flex-row" @submit.prevent="applyFilters">
+    <form class="mt-6 grid gap-3 rounded-2xl border border-border bg-card p-4 md:grid-cols-2 xl:grid-cols-6" @submit.prevent="applyFilters">
       <select v-model="filters.status" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" aria-label="Filter status">
         <option value="">Semua status</option>
         <option v-for="status in ORDER_STATUSES" :key="status" :value="status">
@@ -86,11 +105,17 @@ onMounted(() => {
         <option value="">Semua layanan</option>
         <option v-for="service in ORDER_SERVICES" :key="service" :value="service">{{ service }}</option>
       </select>
+      <select v-model="filters.picUserId" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" aria-label="Filter PIC">
+        <option value="">Semua PIC</option>
+        <option v-for="pic in picOptions" :key="pic.id" :value="pic.id">{{ pic.name }}</option>
+      </select>
+      <input v-model="filters.deadlineFrom" type="date" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" aria-label="Deadline mulai" />
+      <input v-model="filters.deadlineTo" type="date" class="rounded-lg border border-border bg-background px-3 py-2 text-sm" aria-label="Deadline sampai" />
       <input
         v-model="filters.search"
         type="search"
         placeholder="Cari nomor, nama, topik…"
-        class="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        class="rounded-lg border border-border bg-background px-3 py-2 text-sm xl:col-span-2"
       />
       <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
         Filter

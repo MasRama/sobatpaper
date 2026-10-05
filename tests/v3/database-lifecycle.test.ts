@@ -249,7 +249,7 @@ describe('canonical SQLite migration lifecycle', () => {
     const database = openMemoryDatabase();
     try {
       const first = migrate({ database, root: process.cwd() });
-      expect(first.applied).toHaveLength(22);
+      expect(first.applied).toHaveLength(23);
       expect(first.skipped).toEqual([]);
       expect(tableNames(database)).toEqual([
         '_nara_migrations',
@@ -260,6 +260,8 @@ describe('canonical SQLite migration lifecycle', () => {
         'faqs',
         'leads',
         'order_events',
+        'order_final_files',
+        'order_payments',
         'order_sequences',
         'orders',
         'permissions',
@@ -277,7 +279,7 @@ describe('canonical SQLite migration lifecycle', () => {
       ]);
       expect(
         database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get(),
-      ).toEqual({ count: 22 });
+      ).toEqual({ count: 23 });
       expect(
         (database.prepare('SELECT checksum FROM _nara_migrations').all() as Array<{ checksum: string }>).every(
           (row) => /^[a-f0-9]{64}$/.test(row.checksum),
@@ -425,7 +427,7 @@ describe('canonical SQLite migration lifecycle', () => {
       await waitForReady(child, port);
       const database = new Database(databaseFile);
       try {
-        expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 22 });
+        expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 23 });
       } finally {
         database.close();
       }
@@ -471,13 +473,13 @@ describe('canonical SQLite migration lifecycle', () => {
       // alternate migrations after the held lock is released. What matters is
       // that every process accounts for the complete ordered set and each
       // migration is applied exactly once globally.
-      expect(migrationResults.every((result) => result.applied.length + result.skipped.length === 22)).toBe(true);
-      expect(migrationResults.reduce((total, result) => total + result.applied.length, 0)).toBe(22);
-      expect(migrationResults.reduce((total, result) => total + result.skipped.length, 0)).toBe(22);
+      expect(migrationResults.every((result) => result.applied.length + result.skipped.length === 23)).toBe(true);
+      expect(migrationResults.reduce((total, result) => total + result.applied.length, 0)).toBe(23);
+      expect(migrationResults.reduce((total, result) => total + result.skipped.length, 0)).toBe(23);
 
       const database = new Database(databaseFile);
       try {
-        expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 22 });
+        expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 23 });
         expect(
           database
             .prepare(
@@ -494,6 +496,8 @@ describe('canonical SQLite migration lifecycle', () => {
           'faqs',
           'leads',
           'order_events',
+          'order_final_files',
+          'order_payments',
           'order_sequences',
           'orders',
           'permissions',
@@ -652,13 +656,14 @@ describe('canonical SQLite migration lifecycle', () => {
         '202609260009_create_order_events.sql',
         '202609260010_create_leads.sql',
         '202609260011_create_analytics_events.sql',
+        '202610050001_add_order_payments_and_final_files.sql',
       ]);
       expect(result.skipped).toHaveLength(7);
       expect(database.prepare('SELECT email, name FROM users').get()).toEqual({
         email: 'legacy@example.com',
         name: 'legacy@example.com',
       });
-      expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 22 });
+      expect(database.prepare('SELECT COUNT(*) AS count FROM _nara_migrations').get()).toEqual({ count: 23 });
       expect(database.pragma('foreign_key_list(assets)')).toEqual([]);
     } finally {
       database.close();

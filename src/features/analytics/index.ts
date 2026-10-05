@@ -1,4 +1,5 @@
 export { analyticsRoutes } from './server/routes';
+export { trackEvent } from './server/repository';
 export { ANALYTICS_EVENTS, analyticsPayloadSchema, trackEventInputSchema } from './contract';
 export type {
   AnalyticsError,

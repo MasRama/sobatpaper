@@ -5,6 +5,7 @@ import DashboardPage from './pages/DashboardPage.vue';
 import AdminPage from './pages/AdminPage.vue';
 import HomePage from './pages/HomePage.vue';
 import NotFoundPage from './pages/NotFoundPage.vue';
+const ConsultationPage = () => import('./pages/ConsultationPage.vue');
 import { ServiceDetailPage, ServicesPage } from '../features/services/web';
 import { PricingPage } from '../features/pricing/web';
 import { CaraKerjaPage, FaqPage, InfoPage } from '../features/content/web';
@@ -40,6 +41,11 @@ export const appRoutes = [
     path: '/harga',
     name: 'pricing',
     component: PricingPage,
+  },
+  {
+    path: '/konsultasi',
+    name: 'consultation',
+    component: ConsultationPage,
   },
   {
     path: '/order',

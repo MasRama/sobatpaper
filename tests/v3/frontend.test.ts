@@ -39,7 +39,10 @@ describe('Vue frontend shell', () => {
 
     const documentElement = document.documentElement;
     const homeElement = container.firstElementChild;
-    expect(container.querySelector('h1')?.textContent).toContain('Pendampingan Riset');
+    expect(container.querySelector('h1')?.textContent).toContain('Riset nggak harus');
+    expect(container.textContent).toContain('Profesional');
+    expect(container.textContent).toContain('Transparan');
+    expect(container.querySelector('a[aria-label="Konsultasi via WhatsApp"]')).not.toBeNull();
 
     await router.push('/login');
     await new Promise<void>((resolve) => setTimeout(resolve, 0));

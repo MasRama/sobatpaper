@@ -10,6 +10,8 @@ const createdOrderIds: string[] = [];
 afterEach(() => {
   const database = getDatabase();
   for (const id of createdOrderIds.splice(0)) {
+    database.prepare('DELETE FROM order_final_files WHERE order_id = ?').run(id);
+    database.prepare('DELETE FROM order_payments WHERE order_id = ?').run(id);
     database.prepare('DELETE FROM order_events WHERE order_id = ?').run(id);
     database.prepare('DELETE FROM orders WHERE id = ?').run(id);
   }
@@ -96,9 +98,11 @@ describe('orders admin routes', () => {
     expect(forbidden.status).toBe(403);
   });
 
-  it('lists orders with status and search filters', async () => {
+  it('lists orders with status, deadline, PIC, and search filters', async () => {
     const admin = await registerCookie(true);
-    await createOrderId();
+    const id = await createOrderId();
+    const database = getDatabase();
+    database.prepare('UPDATE orders SET pic_user_id = ? WHERE id = ?').run(admin.userId, id);
     const filtered = await adminRequest(admin.cookie, '/api/orders?status=konsultasi&limit=10');
     expect(filtered.status).toBe(200);
     const payload = (await filtered.json()) as {
@@ -112,24 +116,77 @@ describe('orders admin routes', () => {
     const searchedPayload = (await searched.json()) as { data: { total: number } };
     expect(searchedPayload.data.total).toBeGreaterThanOrEqual(1);
 
+    const deadline = await adminRequest(admin.cookie, '/api/orders?deadlineFrom=2030-10-01&deadlineTo=2030-10-31');
+    expect(deadline.status).toBe(200);
+    const deadlinePayload = (await deadline.json()) as { data: { orders: Array<{ id: string }> } };
+    expect(deadlinePayload.data.orders.some((order) => order.id === id)).toBe(true);
+
+    const pic = await adminRequest(admin.cookie, `/api/orders?picUserId=${encodeURIComponent(admin.userId)}`);
+    expect(pic.status).toBe(200);
+    const picPayload = (await pic.json()) as { data: { orders: Array<{ id: string; picUserId: string | null }> } };
+    expect(picPayload.data.orders.some((order) => order.id === id && order.picUserId === admin.userId)).toBe(true);
+
     const invalid = await adminRequest(admin.cookie, '/api/orders?status=bogus');
     expect(invalid.status).toBe(422);
   });
 
-  it('shows order detail with attachments and events', async () => {
+  it('shows order detail with attachments, events, payments, and final files', async () => {
     const admin = await registerCookie(true);
     const id = await createOrderId();
     const response = await adminRequest(admin.cookie, `/api/orders/${id}`);
     expect(response.status).toBe(200);
     const payload = (await response.json()) as {
-      data: { order: { id: string; contactName: string }; attachments: unknown[]; events: unknown[] };
+      data: { order: { id: string; contactName: string }; attachments: unknown[]; events: unknown[]; payments: unknown[]; finalFiles: unknown[] };
     };
     expect(payload.data.order.id).toBe(id);
     expect(payload.data.attachments).toEqual([]);
     expect(payload.data.events).toEqual([]);
+    expect(payload.data.payments).toEqual([]);
+    expect(payload.data.finalFiles).toEqual([]);
 
     const missing = await adminRequest(admin.cookie, `/api/orders/${randomUUID()}`);
     expect(missing.status).toBe(404);
+  });
+
+  it('manages payments and final files for admins', async () => {
+    const admin = await registerCookie(true);
+    const id = await createOrderId();
+
+    const payment = await adminRequest(admin.cookie, `/api/orders/${id}/payments`, {
+      method: 'POST',
+      body: { amount: 1250000, method: 'transfer', reference: 'TRX-001' },
+    });
+    expect(payment.status).toBe(201);
+    const paymentPayload = (await payment.json()) as { data: { payment: { id: string; amount: number; reference: string | null } } };
+    expect(paymentPayload.data.payment).toMatchObject({ amount: 1250000, reference: 'TRX-001' });
+
+    const csrf = await issueCsrf(app, admin.cookie);
+    const form = new FormData();
+    form.set('file', new Blob([new Uint8Array([0x25, 0x50, 0x44, 0x46])], { type: 'application/pdf' }), 'hasil-final.pdf');
+    const uploaded = await app.request(`/api/orders/${id}/final-files`, {
+      method: 'POST',
+      headers: { ...csrfHeaders(csrf) },
+      body: form,
+    });
+    expect(uploaded.status).toBe(201);
+    const uploadPayload = (await uploaded.json()) as { data: { file: { id: string; name: string } } };
+    expect(uploadPayload.data.file.name).toBe('hasil-final.pdf');
+
+    const detail = await adminRequest(admin.cookie, `/api/orders/${id}`);
+    const detailPayload = (await detail.json()) as { data: { payments: unknown[]; finalFiles: unknown[] } };
+    expect(detailPayload.data.payments).toHaveLength(1);
+    expect(detailPayload.data.finalFiles).toHaveLength(1);
+
+    const downloaded = await app.request(`/api/orders/${id}/final-files/${uploadPayload.data.file.id}`, {
+      headers: { Cookie: admin.cookie },
+    });
+    expect(downloaded.status).toBe(200);
+    expect(downloaded.headers.get('content-disposition')).toContain('hasil-final.pdf');
+
+    const deletePayment = await adminRequest(admin.cookie, `/api/orders/${id}/payments/${paymentPayload.data.payment.id}`, { method: 'DELETE' });
+    expect(deletePayment.status).toBe(200);
+    const deleteFile = await adminRequest(admin.cookie, `/api/orders/${id}/final-files/${uploadPayload.data.file.id}`, { method: 'DELETE' });
+    expect(deleteFile.status).toBe(200);
   });
 
   it('applies valid transitions and records audit events', async () => {
@@ -161,6 +218,32 @@ describe('orders admin routes', () => {
     expect(events[0]).toMatchObject({ kind: 'status', from_value: 'konsultasi', to_value: 'analisis_scope' });
     expect(events[0]?.actor_name).toBe('Order Administrator');
     expect(events[1]).toMatchObject({ kind: 'final_price', from_value: null, to_value: '3500000' });
+  });
+
+  it('tracks payment success when an order reaches paid', async () => {
+    const admin = await registerCookie(true);
+    const id = await createOrderId();
+    const database = getDatabase();
+
+    for (const status of ['menunggu_dokumen', 'analisis_scope', 'menunggu_pembayaran', 'paid'] as const) {
+      const response = await adminRequest(admin.cookie, `/api/orders/${id}`, {
+        method: 'PATCH',
+        body: status === 'analisis_scope' ? { status, finalPrice: 2750000 } : { status },
+      });
+      expect(response.status).toBe(200);
+    }
+
+    const event = database
+      .prepare("SELECT payload FROM analytics_events WHERE name = 'payment_success' ORDER BY created_at DESC LIMIT 1")
+      .get() as { payload: string } | undefined;
+    expect(event).toBeDefined();
+    expect(JSON.parse(event?.payload ?? '{}')).toMatchObject({ service: 'skripsi', amount: 2750000 });
+
+    await adminRequest(admin.cookie, `/api/orders/${id}`, { method: 'PATCH', body: { picUserId: admin.userId } });
+    const count = database
+      .prepare("SELECT COUNT(*) AS count FROM analytics_events WHERE name = 'payment_success'")
+      .get() as { count: number };
+    expect(count.count).toBe(1);
   });
 
   it('rejects invalid transitions, missing cancel reason, and unknown PIC', async () => {

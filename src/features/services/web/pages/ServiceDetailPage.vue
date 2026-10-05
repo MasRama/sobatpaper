@@ -12,18 +12,13 @@ const client = createServicesClient();
 const analytics = createAnalyticsClient();
 const route = useRoute();
 const router = useRouter();
-const { linkFor, load: loadSettings } = useSiteSettings();
+const { load: loadSettings } = useSiteSettings();
 
 const service = ref<ServiceDetail | null>(null);
 const isLoading = ref(true);
 const errorMessage = ref('');
 
 const paragraphs = computed(() => (service.value?.description ?? '').split('\n\n').filter(Boolean));
-const consultHref = computed(() =>
-  service.value
-    ? linkFor(`Halo SobatPaper, saya ingin konsultasi layanan ${service.value.name}. Mohon informasi estimasi biaya dan prosesnya.`)
-    : '#',
-);
 
 async function loadDetail(slug: string): Promise<void> {
   isLoading.value = true;
@@ -36,13 +31,33 @@ async function loadDetail(slug: string): Promise<void> {
         title: `${response.data.service.name} — SobatPaper.id`,
         description: response.data.service.tagline,
         path: `/layanan/${response.data.service.slug}`,
-        jsonLd: {
-          '@context': 'https://schema.org',
-          '@type': 'Service',
-          name: response.data.service.name,
-          description: response.data.service.tagline,
-          provider: { '@type': 'Organization', name: 'SobatPaper.id' },
-        },
+        jsonLd: [
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Service',
+            name: response.data.service.name,
+            description: response.data.service.tagline,
+            provider: { '@type': 'Organization', name: 'SobatPaper.id' },
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            itemListElement: [
+              {
+                '@type': 'ListItem',
+                position: 1,
+                name: 'Layanan',
+                item: `${window.location.origin}/layanan`,
+              },
+              {
+                '@type': 'ListItem',
+                position: 2,
+                name: response.data.service.name,
+                item: `${window.location.origin}/layanan/${response.data.service.slug}`,
+              },
+            ],
+          },
+        ],
       });
       analytics.track('view_service', { service: response.data.service.slug });
     } else if (!response.success && response.code === 'NOT_FOUND') {
@@ -127,14 +142,12 @@ watch(
           <p class="mt-4 font-heading text-xs uppercase tracking-[0.2em] text-muted-foreground">Estimasi waktu</p>
           <p class="mt-2 text-sm leading-relaxed">{{ service.estimatedTime }}</p>
           <div class="mt-6 space-y-3">
-            <a
-              :href="consultHref"
-              target="_blank"
-              rel="noreferrer"
+            <RouterLink
+              :to="{ name: 'consultation', query: { service: service.slug } }"
               class="block rounded-lg bg-primary px-4 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
             >
               Konsultasi Sekarang
-            </a>
+            </RouterLink>
             <RouterLink
               :to="`/order?service=${service.slug}`"
               class="block rounded-lg bg-secondary-500 px-4 py-3 text-center text-sm font-semibold text-primary-950 transition-opacity hover:opacity-90"
