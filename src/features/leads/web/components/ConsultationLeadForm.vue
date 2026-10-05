@@ -48,56 +48,56 @@ async function submit(): Promise<void> {
 </script>
 
 <template>
-  <form v-if="!isSubmitted" class="space-y-3" @submit.prevent="submit">
+  <form v-if="!isSubmitted" class="space-y-5 font-['Plus_Jakarta_Sans']" @submit.prevent="submit">
     <div>
-      <label class="text-xs font-medium" for="consult-name">Nama</label>
+      <label class="text-xs font-bold text-[#555b65] dark:text-[#b1b6bf]" for="consult-name">Nama</label>
       <input
         id="consult-name"
         v-model="form.name"
         required
         autocomplete="name"
-        class="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        class="mt-2 w-full rounded-[1rem] border border-[#d6d1c8] bg-white/55 px-4 py-3 text-sm outline-none transition focus:border-[#315bd6] dark:border-white/15 dark:bg-white/[0.035] dark:focus:border-[#9eb6ff]"
         placeholder="Nama kamu"
       />
     </div>
     <div>
-      <label class="text-xs font-medium" for="consult-whatsapp">WhatsApp</label>
+      <label class="text-xs font-bold text-[#555b65] dark:text-[#b1b6bf]" for="consult-whatsapp">WhatsApp</label>
       <input
         id="consult-whatsapp"
         v-model="form.whatsapp"
         required
         inputmode="tel"
         autocomplete="tel"
-        class="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        class="mt-2 w-full rounded-[1rem] border border-[#d6d1c8] bg-white/55 px-4 py-3 text-sm outline-none transition focus:border-[#315bd6] dark:border-white/15 dark:bg-white/[0.035] dark:focus:border-[#9eb6ff]"
         placeholder="08xxxxxxxxxx"
       />
     </div>
     <div>
-      <label class="text-xs font-medium" for="consult-need">Ceritakan kebutuhanmu</label>
+      <label class="text-xs font-bold text-[#555b65] dark:text-[#b1b6bf]" for="consult-need">Ceritakan kebutuhanmu</label>
       <textarea
         id="consult-need"
         v-model="form.need"
         required
         rows="3"
-        class="mt-1 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm"
+        class="mt-2 w-full resize-none rounded-[1rem] border border-[#d6d1c8] bg-white/55 px-4 py-3 text-sm leading-6 outline-none transition focus:border-[#315bd6] dark:border-white/15 dark:bg-white/[0.035] dark:focus:border-[#9eb6ff]"
         :placeholder="serviceName ? `Apa yang perlu dibantu untuk ${serviceName}?` : 'Apa yang perlu dibantu?'"
       />
     </div>
-    <p v-if="errorMessage" role="alert" class="text-xs text-destructive">{{ errorMessage }}</p>
+    <p v-if="errorMessage" role="alert" class="text-xs text-[#b9472f]">{{ errorMessage }}</p>
     <button
       type="submit"
       :disabled="isSubmitting"
-      class="w-full rounded-lg bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+      class="w-full rounded-[1rem] bg-[#17191e] px-4 py-3.5 text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:translate-y-0 disabled:opacity-60 dark:bg-[#f4f2ed] dark:text-[#17191e]"
     >
       {{ buttonLabel }}
     </button>
-    <p class="text-[11px] leading-relaxed text-muted-foreground">
+    <p class="text-[11px] leading-5 text-[#858b94] dark:text-[#8f959f]">
       Setelah dikirim, WhatsApp akan terbuka untuk melanjutkan konsultasi.
     </p>
   </form>
-  <div v-else class="rounded-xl bg-primary/10 p-4 text-sm">
-    <p class="font-semibold text-primary">Data konsultasi sudah tercatat.</p>
-    <a :href="whatsappHref" target="_blank" rel="noreferrer" class="mt-2 inline-block font-semibold text-primary hover:underline">
+  <div v-else class="border-y border-[#dcd8d0] py-5 text-sm dark:border-white/10">
+    <p class="font-bold">Data konsultasi sudah tercatat.</p>
+    <a :href="whatsappHref" target="_blank" rel="noreferrer" class="mt-2 inline-block font-bold text-[#315bd6] dark:text-[#9eb6ff]">
       Buka WhatsApp lagi
     </a>
   </div>

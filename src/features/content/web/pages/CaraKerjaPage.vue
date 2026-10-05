@@ -24,45 +24,40 @@ const STEPS: readonly { title: string; description: string }[] = [
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-6 py-12 lg:py-16">
-    <p class="font-heading text-xs uppercase tracking-[0.25em] text-primary">Cara Kerja</p>
-    <h1 class="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-      Alur pemesanan yang sederhana
-    </h1>
-    <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-      Delapan langkah dari konsultasi sampai file final — selalu transparan di setiap tahap.
-    </p>
-
-    <ol class="mt-10">
-      <li v-for="(step, index) in STEPS" :key="step.title" class="relative flex gap-5 pb-8 last:pb-0">
-        <div class="flex flex-col items-center" aria-hidden="true">
-          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-sm font-semibold text-primary-foreground">
-            {{ index + 1 }}
-          </span>
-          <span v-if="index < STEPS.length - 1" class="mt-2 w-px flex-1 bg-border"></span>
+  <main class="bg-[#f7f5f2] font-['Plus_Jakarta_Sans'] text-[#17191e] dark:bg-[#0d0f13] dark:text-[#f4f2ed]">
+    <section class="mx-auto max-w-[1240px] px-6 py-16 lg:px-10 lg:py-24">
+      <div class="grid gap-8 lg:grid-cols-[0.72fr_1.28fr] lg:gap-16">
+        <div>
+          <p class="text-xs font-extrabold text-[#ff704d]">Cara kerja</p>
+          <p class="mt-4 max-w-[310px] text-sm leading-6 text-[#777d87] dark:text-[#9da3ad]">
+            Dari cerita awal sampai file final, setiap tahap dibuat jelas supaya kamu tahu apa yang sedang berjalan.
+          </p>
         </div>
-        <div class="pb-1">
-          <h2 class="font-heading text-lg font-semibold tracking-tight">{{ step.title }}</h2>
-          <p class="mt-1 text-sm leading-relaxed text-muted-foreground sm:text-base">{{ step.description }}</p>
-        </div>
-      </li>
-    </ol>
+        <h1 class="max-w-[820px] text-[clamp(3rem,6vw,5.4rem)] font-semibold leading-[0.96] tracking-[-0.06em]">
+          Nggak perlu nebak-nebak <span class="font-['Instrument_Serif'] font-normal italic text-[#315bd6] dark:text-[#9eb6ff]">prosesnya sampai mana.</span>
+        </h1>
+      </div>
 
-    <div class="mt-12 flex flex-col gap-3 sm:flex-row">
-      <a
-        :href="consultLink"
-        target="_blank"
-        rel="noreferrer"
-        class="rounded-lg bg-primary px-6 py-3 text-center text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
-      >
-        Mulai Konsultasi
-      </a>
-      <RouterLink
-        to="/harga"
-        class="rounded-lg border border-border px-6 py-3 text-center text-sm font-semibold transition-colors hover:border-primary/40"
-      >
-        Lihat Harga
-      </RouterLink>
-    </div>
+      <ol class="mt-14 border-y border-[#dcd8d0] dark:border-white/10">
+        <li
+          v-for="(step, index) in STEPS"
+          :key="step.title"
+          class="grid gap-4 border-b border-[#dcd8d0] py-7 last:border-b-0 dark:border-white/10 sm:grid-cols-[60px_0.72fr_1.28fr] sm:items-start sm:gap-8 lg:py-8"
+        >
+          <span class="text-xs font-bold tabular-nums text-[#a29c92] dark:text-[#777d87]">{{ String(index + 1).padStart(2, '0') }}</span>
+          <h2 class="text-[clamp(1.35rem,2vw,1.8rem)] font-bold tracking-[-0.035em]">{{ step.title }}</h2>
+          <p class="max-w-[650px] text-sm leading-7 text-[#707680] dark:text-[#9ca2ac] sm:text-[15px]">{{ step.description }}</p>
+        </li>
+      </ol>
+
+      <div class="mt-12 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <a :href="consultLink" target="_blank" rel="noreferrer" class="rounded-[1rem] bg-[#17191e] px-6 py-3.5 text-center text-sm font-bold text-white transition-transform hover:-translate-y-0.5 dark:bg-[#f4f2ed] dark:text-[#17191e]">
+          Mulai konsultasi
+        </a>
+        <RouterLink to="/harga" class="px-3 py-3.5 text-center text-sm font-bold text-[#555b65] transition hover:text-[#17191e] dark:text-[#a5abb4] dark:hover:text-white">
+          Lihat harga →
+        </RouterLink>
+      </div>
+    </section>
   </main>
 </template>

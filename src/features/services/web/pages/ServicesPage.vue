@@ -31,35 +31,47 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl px-6 py-12 lg:px-8 lg:py-16">
-    <p class="font-heading text-xs uppercase tracking-[0.25em] text-primary">Layanan Akademik</p>
-    <h1 class="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-      Pendampingan untuk setiap tahap riset
-    </h1>
-    <p class="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground">
-      Pilih layanan sesuai kebutuhanmu — setiap layanan punya cakupan, proses,
-      estimasi waktu, dan harga mulai yang transparan.
-    </p>
+  <main class="bg-[#f7f5f2] font-['Plus_Jakarta_Sans'] text-[#17191e] dark:bg-[#0d0f13] dark:text-[#f4f2ed]">
+    <section class="mx-auto max-w-[1240px] px-6 py-16 lg:px-10 lg:py-24">
+      <div class="grid gap-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-16">
+        <div>
+          <p class="text-xs font-extrabold text-[#ff704d]">Layanan</p>
+          <p class="mt-4 max-w-[300px] text-sm leading-6 text-[#777d87] dark:text-[#9da3ad]">
+            Nggak harus tahu nama layanannya dari awal. Ceritakan kondisimu, lalu pilih yang paling relevan.
+          </p>
+        </div>
+        <div>
+          <h1 class="max-w-[820px] text-[clamp(3rem,6vw,5.4rem)] font-semibold leading-[0.96] tracking-[-0.06em]">
+            Datang bawa masalahnya. <span class="font-['Instrument_Serif'] font-normal italic text-[#315bd6] dark:text-[#9eb6ff]">Kita cari titik beresnya.</span>
+          </h1>
+        </div>
+      </div>
 
-    <p v-if="isLoading" class="mt-10 text-sm text-muted-foreground">Memuat layanan…</p>
-    <p v-else-if="errorMessage" role="alert" class="mt-10 rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-sm">
-      {{ errorMessage }}
-    </p>
-    <div v-else class="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <RouterLink
-        v-for="service in services"
-        :key="service.slug"
-        :to="`/layanan/${service.slug}`"
-        class="group flex flex-col rounded-2xl border border-border bg-card p-6 shadow-soft transition-colors hover:border-primary/40"
-      >
-        <h2 class="font-heading text-lg font-semibold tracking-tight group-hover:text-primary">{{ service.name }}</h2>
-        <p class="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{{ service.tagline }}</p>
-        <p class="mt-4 text-sm">
-          <span class="text-muted-foreground">Mulai </span>
-          <span class="font-semibold">{{ formatIDR(service.startingPrice) }}</span>
-        </p>
-        <p class="mt-1 text-xs text-muted-foreground">{{ service.estimatedTime }}</p>
-      </RouterLink>
-    </div>
+      <p v-if="isLoading" class="mt-14 text-sm text-[#747a84] dark:text-[#9da3ad]">Memuat layanan…</p>
+      <p v-else-if="errorMessage" role="alert" class="mt-14 border-y border-[#dcd8d0] py-5 text-sm dark:border-white/10">
+        {{ errorMessage }}
+      </p>
+      <div v-else class="mt-14 border-y border-[#dcd8d0] dark:border-white/10">
+        <RouterLink
+          v-for="(service, index) in services"
+          :key="service.slug"
+          :to="`/layanan/${service.slug}`"
+          class="group grid gap-5 border-b border-[#dcd8d0] py-7 last:border-b-0 dark:border-white/10 sm:grid-cols-[56px_minmax(0,1fr)_auto] sm:items-center sm:gap-7 lg:py-8"
+        >
+          <span class="text-xs font-bold tabular-nums text-[#a29c92] dark:text-[#777d87]">{{ String(index + 1).padStart(2, '0') }}</span>
+          <div>
+            <h2 class="text-[clamp(1.4rem,2.2vw,2rem)] font-bold tracking-[-0.035em] transition-colors group-hover:text-[#315bd6] dark:group-hover:text-[#9eb6ff]">
+              {{ service.name }}
+            </h2>
+            <p class="mt-2 max-w-[690px] text-sm leading-6 text-[#707680] dark:text-[#9ca2ac]">{{ service.tagline }}</p>
+          </div>
+          <div class="flex items-end justify-between gap-8 sm:block sm:min-w-[170px] sm:text-right">
+            <p class="text-sm font-bold">{{ formatIDR(service.startingPrice) }}</p>
+            <p class="mt-1 text-xs text-[#858b94] dark:text-[#8f959f]">{{ service.estimatedTime }}</p>
+            <span class="mt-3 inline-block text-lg transition-transform group-hover:translate-x-1" aria-hidden="true">→</span>
+          </div>
+        </RouterLink>
+      </div>
+    </section>
   </main>
 </template>

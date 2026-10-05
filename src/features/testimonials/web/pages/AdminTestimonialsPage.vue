@@ -123,6 +123,15 @@ onMounted(() => {
     <p v-else-if="errorMessage" role="alert" class="mt-6 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm">
       {{ errorMessage }}
     </p>
+    <div v-else-if="items.length === 0" class="mt-6 border-y border-border py-6">
+      <p class="font-heading text-lg font-semibold">Belum ada testimonial asli.</p>
+      <p class="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+        Landing page sementara menampilkan contoh testimonial. Begitu testimonial pertama ditambahkan di sini, contoh tersebut otomatis tidak ditampilkan lagi.
+      </p>
+      <button type="button" class="mt-4 font-semibold text-primary hover:underline" @click="startCreate">
+        Tambah testimonial pertama
+      </button>
+    </div>
     <div v-else class="mt-6 overflow-x-auto rounded-2xl border border-border bg-card shadow-soft">
       <table class="w-full min-w-[560px] text-left text-sm">
         <thead>

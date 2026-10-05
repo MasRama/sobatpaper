@@ -44,29 +44,36 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-6 py-12 lg:px-8 lg:py-16">
-    <RouterLink to="/layanan" class="text-sm font-semibold text-primary hover:underline">← Lihat layanan</RouterLink>
-    <div class="mt-5 grid gap-8 md:grid-cols-[1fr_0.9fr] md:items-start">
-      <section>
-        <p class="font-heading text-xs uppercase tracking-[0.22em] text-primary">Konsultasi</p>
-        <h1 class="mt-3 font-heading text-3xl font-semibold tracking-tight sm:text-4xl">Ceritakan kebutuhanmu dulu.</h1>
-        <p class="mt-4 text-sm leading-7 text-muted-foreground sm:text-base">
-          Data ini membantu tim memahami konteks sebelum percakapan pindah ke WhatsApp. Tidak perlu email dan tidak perlu membuat akun.
-        </p>
-        <div v-if="serviceName" class="mt-6 rounded-xl border border-border bg-muted/40 p-4 text-sm">
-          <span class="text-muted-foreground">Layanan yang diminati</span>
-          <p class="mt-1 font-semibold">{{ serviceName }}</p>
-        </div>
-        <p v-else-if="isLoadingService" class="mt-6 text-sm text-muted-foreground">Memuat konteks layanan…</p>
-      </section>
+  <main class="bg-[#f7f5f2] font-['Plus_Jakarta_Sans'] text-[#17191e] dark:bg-[#0d0f13] dark:text-[#f4f2ed]">
+    <section class="mx-auto max-w-[1240px] px-6 py-16 lg:px-10 lg:py-24">
+      <RouterLink to="/layanan" class="text-xs font-bold text-[#777d87] transition hover:text-[#17191e] dark:text-[#9da3ad] dark:hover:text-white">← Kembali ke layanan</RouterLink>
 
-      <section class="rounded-2xl border border-border bg-card p-5 shadow-soft sm:p-6" aria-label="Form konsultasi">
-        <ConsultationLeadForm
-          :service-slug="serviceSlug || undefined"
-          :service-name="serviceName || undefined"
-          :whatsapp-href="whatsappHref"
-        />
-      </section>
-    </div>
+      <div class="mt-8 grid gap-12 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16">
+        <section>
+          <p class="text-xs font-extrabold text-[#ff704d]">Konsultasi</p>
+          <h1 class="mt-4 max-w-[650px] text-[clamp(3rem,6vw,5.35rem)] font-semibold leading-[0.96] tracking-[-0.06em]">
+            Ceritakan dulu. <span class="font-['Instrument_Serif'] font-normal italic text-[#315bd6] dark:text-[#9eb6ff]">Nggak harus rapi.</span>
+          </h1>
+          <p class="mt-6 max-w-[560px] text-[15px] leading-8 text-[#666c76] dark:text-[#a5abb4]">
+            Bawa konteks seadanya: topik, draft, data, deadline, atau bagian yang bikin mentok. Data ini membantu tim memahami kebutuhan sebelum percakapan dilanjutkan lewat WhatsApp.
+          </p>
+          <p class="mt-4 text-sm font-semibold text-[#555b65] dark:text-[#b1b6bf]">Tidak perlu email dan tidak perlu membuat akun.</p>
+
+          <div v-if="serviceName" class="mt-8 border-y border-[#dcd8d0] py-5 text-sm dark:border-white/10">
+            <span class="text-xs font-semibold text-[#858b94] dark:text-[#8f959f]">Layanan yang diminati</span>
+            <p class="mt-1.5 font-bold">{{ serviceName }}</p>
+          </div>
+          <p v-else-if="isLoadingService" class="mt-8 text-sm text-[#747a84] dark:text-[#9da3ad]">Memuat konteks layanan…</p>
+        </section>
+
+        <section class="border-t border-[#dcd8d0] pt-7 dark:border-white/10 lg:border-l lg:border-t-0 lg:pl-12 lg:pt-0" aria-label="Form konsultasi">
+          <ConsultationLeadForm
+            :service-slug="serviceSlug || undefined"
+            :service-name="serviceName || undefined"
+            :whatsapp-href="whatsappHref"
+          />
+        </section>
+      </div>
+    </section>
   </main>
 </template>

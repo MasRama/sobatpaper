@@ -38,26 +38,35 @@ watch(() => props.slug, (slug) => loadPage(slug));
 </script>
 
 <template>
-  <main class="mx-auto max-w-3xl px-6 py-12 lg:py-16">
-    <p v-if="isLoading" class="text-sm text-muted-foreground">Memuat halaman…</p>
-    <p v-else-if="errorMessage" role="alert" class="rounded-xl border border-destructive/30 bg-destructive/5 p-5 text-sm">
-      {{ errorMessage }}
-    </p>
-    <article v-else-if="page">
-      <h1 class="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">{{ page.title }}</h1>
-      <div class="mt-8 space-y-5">
-        <template v-for="(block, index) in blocks" :key="index">
-          <h2 v-if="block.type === 'heading'" class="pt-4 font-heading text-xl font-semibold tracking-tight">
-            {{ block.text }}
-          </h2>
-          <p v-else-if="block.type === 'paragraph'" class="text-base leading-relaxed text-muted-foreground">
-            {{ block.text }}
-          </p>
-          <ul v-else class="list-disc space-y-2 pl-5 text-base leading-relaxed text-muted-foreground">
-            <li v-for="item in block.items" :key="item">{{ item }}</li>
-          </ul>
-        </template>
-      </div>
-    </article>
+  <main class="min-h-[65vh] bg-[#f7f5f2] font-['Plus_Jakarta_Sans'] text-[#17191e] dark:bg-[#0d0f13] dark:text-[#f4f2ed]">
+    <section class="mx-auto max-w-[1240px] px-6 py-16 lg:px-10 lg:py-24">
+      <p v-if="isLoading" class="text-sm text-[#747a84] dark:text-[#9da3ad]">Memuat halaman…</p>
+      <p v-else-if="errorMessage" role="alert" class="border-y border-[#dcd8d0] py-5 text-sm dark:border-white/10">
+        {{ errorMessage }}
+      </p>
+      <article v-else-if="page" class="grid gap-10 lg:grid-cols-[0.62fr_1.38fr] lg:gap-16">
+        <div>
+          <p class="text-xs font-extrabold text-[#ff704d]">Informasi</p>
+          <h1 class="mt-4 max-w-[470px] text-[clamp(2.8rem,5.6vw,5rem)] font-semibold leading-[0.96] tracking-[-0.055em]">{{ page.title }}</h1>
+        </div>
+
+        <div class="max-w-[780px] border-t border-[#dcd8d0] pt-2 dark:border-white/10">
+          <template v-for="(block, index) in blocks" :key="index">
+            <h2 v-if="block.type === 'heading'" class="border-b border-[#dcd8d0] pb-4 pt-9 text-[clamp(1.5rem,2.5vw,2rem)] font-bold tracking-[-0.035em] first:pt-6 dark:border-white/10">
+              {{ block.text }}
+            </h2>
+            <p v-else-if="block.type === 'paragraph'" class="pt-5 text-[15px] leading-8 text-[#5f6570] dark:text-[#adb2bb]">
+              {{ block.text }}
+            </p>
+            <ul v-else class="space-y-3 pt-5 text-[15px] leading-7 text-[#5f6570] dark:text-[#adb2bb]">
+              <li v-for="item in block.items" :key="item" class="grid grid-cols-[18px_1fr] gap-3">
+                <span class="pt-0.5 text-[#ff704d]" aria-hidden="true">—</span>
+                <span>{{ item }}</span>
+              </li>
+            </ul>
+          </template>
+        </div>
+      </article>
+    </section>
   </main>
 </template>

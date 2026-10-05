@@ -154,36 +154,96 @@ void load();
       </nav>
     </header>
 
-    <header v-else class="sticky inset-x-0 top-0 z-50 border-b border-border bg-background/95 backdrop-blur-md">
-      <nav class="mx-auto flex min-h-16 max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-6 py-3 lg:flex-nowrap lg:px-8" aria-label="Navigasi utama">
-        <RouterLink to="/" class="flex shrink-0 items-center gap-2" :aria-label="`Beranda ${SITE_NAME}`">
-          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary font-heading text-sm font-bold text-secondary-400">S</span>
-          <span class="leading-tight">
-            <span class="block font-heading text-base font-semibold tracking-tight">sobatpaper.id</span>
-            <span class="block text-[11px] text-muted-foreground">{{ SITE_TAGLINE }}</span>
-          </span>
+    <header v-else class="sticky inset-x-0 top-0 z-50 border-b border-black/[0.06] bg-[#f7f5f2]/92 px-4 py-3 backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#0d0f13]/92 sm:px-6">
+      <nav class="relative mx-auto flex min-h-12 max-w-[1240px] items-center gap-3" aria-label="Navigasi utama">
+        <RouterLink
+          to="/"
+          class="flex shrink-0 items-center px-1 py-2 font-['Plus_Jakarta_Sans'] text-[17px] font-extrabold tracking-[-0.04em] text-[#171719] dark:text-[#f7f3ee]"
+          :aria-label="`Beranda ${SITE_NAME}`"
+        >
+          sobatpaper<span class="text-[#f06f4f]">.</span>
         </RouterLink>
 
-        <div class="order-3 flex w-full items-center gap-1 overflow-x-auto pb-1 lg:order-none lg:w-auto lg:flex-1 lg:pb-0">
+        <div class="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
           <RouterLink
             v-for="item in PUBLIC_NAV_ITEMS"
             :key="item.to"
             :to="item.to"
-            class="shrink-0 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
-            active-class="bg-muted text-foreground"
+            class="px-3 py-2 font-['Plus_Jakarta_Sans'] text-[12px] font-semibold text-[#68635e] transition hover:text-[#171719] dark:text-[#aaa6a1] dark:hover:text-white"
+            active-class="text-[#171719] dark:text-white"
           >
             {{ item.label }}
           </RouterLink>
         </div>
 
-        <div class="ml-auto flex shrink-0 items-center gap-2">
+        <div class="ml-auto flex items-center gap-1.5">
+          <button
+            type="button"
+            class="grid h-10 w-10 place-items-center text-[#5d5955] transition hover:text-[#171719] dark:text-[#b9b4ae] dark:hover:text-white"
+            :aria-label="isDark ? 'Gunakan mode terang' : 'Gunakan mode gelap'"
+            :title="isDark ? 'Mode terang' : 'Mode gelap'"
+            @click="toggleTheme"
+          >
+            <svg v-if="isDark" viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <circle cx="12" cy="12" r="3.5" />
+              <path d="M12 2v2.1M12 19.9V22M4.93 4.93l1.49 1.49M17.58 17.58l1.49 1.49M2 12h2.1M19.9 12H22M4.93 19.07l1.49-1.49M17.58 6.42l1.49-1.49" />
+            </svg>
+            <svg v-else viewBox="0 0 24 24" class="h-[18px] w-[18px]" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M20.4 14.9A8.5 8.5 0 0 1 9.1 3.6 8.5 8.5 0 1 0 20.4 14.9Z" />
+            </svg>
+          </button>
+
           <a
             :href="consultLink"
             target="_blank"
             rel="noreferrer"
-            class="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+            class="hidden whitespace-nowrap rounded-full bg-[#1a191b] px-4 py-2.5 font-['Plus_Jakarta_Sans'] text-[12px] font-bold text-white transition hover:-translate-y-0.5 hover:bg-[#313034] dark:bg-[#f2eee8] dark:text-[#171719] dark:hover:bg-white sm:inline-flex"
           >
-            Konsultasi Sekarang
+            Konsultasi
+            <svg viewBox="0 0 20 20" class="ml-1.5 h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M4 10h11M11 6l4 4-4 4" />
+            </svg>
+          </a>
+
+          <button
+            type="button"
+            class="grid h-10 w-10 place-items-center text-[#171719] transition dark:text-[#f7f3ee] lg:hidden"
+            :aria-expanded="isMobileMenuOpen"
+            aria-controls="public-mobile-menu"
+            aria-label="Buka menu"
+            @click="isMobileMenuOpen = !isMobileMenuOpen"
+          >
+            <svg v-if="!isMobileMenuOpen" viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="M4 8h16M4 16h16" />
+            </svg>
+            <svg v-else viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+              <path d="m6 6 12 12M18 6 6 18" />
+            </svg>
+          </button>
+        </div>
+
+        <div
+          v-if="isMobileMenuOpen"
+          id="public-mobile-menu"
+          class="absolute left-0 right-0 top-[calc(100%+12px)] overflow-hidden rounded-[1.25rem] border border-black/[0.06] bg-[#fffdf9]/98 p-2 shadow-[0_20px_50px_rgba(28,24,20,0.12)] backdrop-blur-xl dark:border-white/[0.08] dark:bg-[#15171c]/98 lg:hidden"
+        >
+          <RouterLink
+            v-for="item in PUBLIC_NAV_ITEMS"
+            :key="item.to"
+            :to="item.to"
+            class="flex items-center justify-between px-4 py-3 font-['Plus_Jakarta_Sans'] text-sm font-semibold text-[#57534f] transition hover:text-[#171719] dark:text-[#bbb6b0] dark:hover:text-white"
+          >
+            <span>{{ item.label }}</span>
+            <span aria-hidden="true">↗</span>
+          </RouterLink>
+          <a
+            :href="consultLink"
+            target="_blank"
+            rel="noreferrer"
+            class="mt-1 flex items-center justify-between border-t border-black/[0.06] px-4 py-3 font-['Plus_Jakarta_Sans'] text-sm font-bold text-[#171719] dark:border-white/[0.08] dark:text-white"
+          >
+            <span>Konsultasi</span>
+            <span aria-hidden="true">→</span>
           </a>
         </div>
       </nav>
